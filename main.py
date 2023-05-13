@@ -74,7 +74,7 @@ def ask_gpt3(match_json):
         print("No player found with the given personaname in the match.")
 
 app_title = ctk.CTkLabel(app, text="Match Analysis Assistant", font=("Arial", 20, "bold"))
-app_title.grid(row=0, column=0, columnspan=2)
+app_title.grid(row=0, column=0, columnspan=2, pady=10)
 
 player_id_lbl = ctk.CTkLabel(app, text="Player ID", pady= 10, padx= 10)
 player_id_lbl.grid(row=1, column=0)
