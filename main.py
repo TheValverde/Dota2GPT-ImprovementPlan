@@ -58,7 +58,7 @@ def ask_gpt3(match_json):
         cleaned_player_data = clean_player_data(player_data)
         combined_question = f"This is the match you will analyze. The players' data is {cleaned_players_data}. You are providing your services for player {personaname}, whose data is {cleaned_player_data}"
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": f"You are a helpful and expert Dota 2 coach. You provide excellent analysis of matches provided to you in json format, and provide thorough improvement plans that dont cover basics, but rather in-depth topics, all while also taking the tone of Gordon Ramsey from Hell's Kitchen ."},
                 {"role": "user", "content": combined_question}
@@ -67,7 +67,9 @@ def ask_gpt3(match_json):
         response_content = response['choices'][0]['message']['content']
         
         # insert the response at the end of the text box
-        response_box.insert(tkinter.END, response_content)
+       # response_text.insert(tkinter.END, response_content)
+        #response_text(text= f"{response_content}")
+        response_text.configure(text= f"{response_content}")
     else:
         print("No player found with the given personaname in the match.")
 
@@ -80,7 +82,9 @@ match_id_entry.grid(row=1, column=0)
 submit_button = ctk.CTkButton(app, text="Ask", command=get_match_details)
 submit_button.grid(row=2, column=0)
 
-response_box = tkinter.Text(app)
+response_box = ctk.CTkScrollableFrame(app, width=300, height=400)
 response_box.grid(row=3, column=0, columnspan=4)
 
+response_text = ctk.CTkLabel(response_box, text="", wraplength=300)
+response_text.pack()
 app.mainloop()
