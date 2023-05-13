@@ -60,7 +60,7 @@ def ask_gpt3(match_json):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f"You are a helpful and expert Dota 2 coach. You provide excellent analysis of matches provided to you in json format, and provide thorough improvement plans that dont cover basics, but rather in-depth topics, all while also taking the tone of Gordon Ramsey from Hell's Kitchen ."},
+                {"role": "system", "content": f"You are a helpful and expert Dota 2 coach. You provide excellent analysis of matches provided to you in json format, and provide thorough improvement plans that dont cover basics, but rather in-depth topics, all while also taking a reassuring tone."},
                 {"role": "user", "content": combined_question}
             ]
         )
@@ -73,17 +73,24 @@ def ask_gpt3(match_json):
     else:
         print("No player found with the given personaname in the match.")
 
-player_id_entry = ctk.CTkEntry(app)
-player_id_entry.grid(row=0, column=0)
+app_title = ctk.CTkLabel(app, text="Match Analysis Assistant", font=("Arial", 20, "bold"))
+app_title.grid(row=0, column=0, columnspan=2)
 
+player_id_lbl = ctk.CTkLabel(app, text="Player ID", pady= 10, padx= 10)
+player_id_lbl.grid(row=1, column=0)
+player_id_entry = ctk.CTkEntry(app)
+player_id_entry.grid(row=1, column=1)
+
+match_id_lbl = ctk.CTkLabel(app, text="Match ID", pady= 10, padx= 10)
+match_id_lbl.grid(row=2, column=0)
 match_id_entry = ctk.CTkEntry(app)
-match_id_entry.grid(row=1, column=0)
+match_id_entry.grid(row=2, column=1)
 
 submit_button = ctk.CTkButton(app, text="Ask", command=get_match_details)
-submit_button.grid(row=2, column=0)
+submit_button.grid(row=3, column=0, pady=10, padx=10)
 
 response_box = ctk.CTkScrollableFrame(app, width=300, height=400)
-response_box.grid(row=3, column=0, columnspan=4)
+response_box.grid(row=4, column=0, columnspan=4)
 
 response_text = ctk.CTkLabel(response_box, text="", wraplength=300)
 response_text.pack()
