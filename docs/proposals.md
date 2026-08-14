@@ -1,111 +1,77 @@
-# What we have vs what the pitches actually mean
+# What we have, and what we can still do with OpenDota
 
-Nothing in the pitch list is built. This page is the spec for approval.
+Pitches below are limited to **OpenDota HTTP + data we already store**. In-game overlays, Steam-folder sniffing, and window opacity are out of scope.
+
+OpenDota checked against live responses and [the public API](https://docs.opendota.com/): `GET /matches/{id}`, `GET /players/{id}/matches` (`project`, `date`, `limit`, `lobby_type`, `game_mode`, `significant`), `GET /benchmarks?hero_id=`, `POST /request/{match_id}`, `GET /request/{jobId}`, `GET /constants/*`.
 
 ## What the app does today
 
-It is a **local companion window**, not an in-game overlay. `uv run dota2-coach` opens a frameless desktop window over a local server. Dota 2 does not know it exists. It cannot see your draft, your HUD, or who is in your current lobby unless you type those people in.
+Local companion window. Dota does not see it. No live lobby, no draft.
 
-### Coach tab
+**Coach.** `GET /matches/{match_id}` plus constants. We keep KDA, GPM/XPM, lane (`lane_role` mapped to Safe/Mid/Off/Jungle), items, and a few parse fields if present. We send that to an LLM. We **do not** pass `players[].benchmarks`, even though a parsed match returns them as `{ raw, pct }` per stat (confirmed on a live parsed match: `gold_per_min.pct` etc.).
 
-You type a persona name or 32-bit account ID, then a match ID (or pick from that player's recent OpenDota games). The app:
+**Fantasy.** `GET /players/{id}/matches` with `significant=0` (turbo and unranked included) and a projected field list. Scores with one hardcoded formula. Span is local filtering of the SQLite cache. Refresh is manual.
 
-1. Downloads that match from OpenDota.
-2. Resolves hero/item names.
-3. Builds a compact brief: KDA, GPM/XPM, lane, items, a few wards/stacks/stuns fields if OpenDota parsed the replay, plus the rest of the scoreboard.
-4. Sends that brief to an LLM.
-5. Shows a structured report: headline, letter grade, KDA context, strengths, leaks, focus areas, next three games.
+**Not in the API (so we will not pitch them):**
 
-You must have `OPENAI_API_KEY` for this tab. The model is not told your role as pos 1-5. It is not given rank-peer averages. If OpenDota never parsed the replay, stun/ward/teamfight fields are simply missing and the prompt says not to invent them.
+- Valve ranked role queue (pos 1-5). OpenDota has `lane_role` 1-4 and `is_roaming`, not "queued as 4".
+- Same-rank-only percentiles. `GET /benchmarks?hero_id=` is a **hero-wide** curve. Match `benchmarks.pct` is the same idea (where this game sits on that hero's distribution), not "Ancient 5 only".
+- Live game events. `GET /live` is pro/top games, not your client.
 
-### Fantasy tab
+## Feasible pitches
 
-You search OpenDota names (or paste account IDs) and add as many accounts as you want. The roster is stored in a local SQLite file.
+### P4. Coach from lane and farm, not a fake pos 1-5
 
-You pick a span: N days, weeks, months, or last N matches. Refresh pulls match history from OpenDota and scores each game with a **fixed formula**:
+**API:** `lane_role`, `lane`, `is_roaming`, `last_hits`, `gold_per_min`, `obs_placed` on `GET /matches/{id}` (parsed). We already map `lane_role` to a lane name.
 
-```
-3 + 0.3*kills - 0.3*deaths + 0.15*assists + 0.003*(last hits+denies)
-+ 0.002*GPM + towers + roshans + 3*teamfight% + 0.5*obs + 0.5*stacks
-+ 0.25*runes + 4*first blood + 0.05*stuns
-```
+**Would mean:** label the player as something like "safe core", "safe support", "mid", "off", "roam" using those fields (high LH/GPM on safe lane vs high obs / low farm). Change the prompt to that label. We cannot print "you queued pos 4" because OpenDota does not expose that.
 
-The board shows total, average, best/worst, a sparkline, and a per-match list. Click a match to jump to Coach with that ID filled in.
+### P5. Put OpenDota benchmarks in the brief
 
-There is no ranked-only filter (`significant=0`, so turbo and unranked count). There is no CSV export. Weights are not editable. The board does not update until you hit Refresh. Unparsed games still get a score, but ward/stun/teamfight terms are zero.
+**API:** parsed `GET /matches/{id}` already includes `players[].benchmarks` (`gold_per_min`, `xp_per_min`, `kills_per_min`, `last_hits_per_min`, `hero_damage_per_min`, `tower_damage`, … each `{ raw, pct }`). If the match is unparsed, `GET /benchmarks?hero_id=` returns the percentile curve and we interpolate GPM/XPM/LH ourselves.
 
-### Window chrome
+**Would mean:** the LLM sees "GPM 24th percentile on this hero", not just "470 GPM". Honest limit: hero population, not your medal.
 
-Title bar with Coach / Fantasy tabs. Pin (always on top), minimize, close. No opacity slider. Clicks always hit the window, not the game underneath.
+### P6. Request a parse, then reload
 
-## Pitches, spelled out
+**API:** `POST /request/{match_id}` (OpenDota counts this as **10** rate-limit calls), then `GET /request/{jobId}`, then `GET /matches/{id}` again. Parsed rows get `version`, stuns, teamfight %, obs, stacks, runes, `benchmarks`.
 
-### P1. In-game overlay (Overwolf or Dota GSI)
+**Would mean:** a button when `version` is missing. Wait/poll, then re-coach and re-score. Can take minutes. Fresh pubs often need this or fantasy wards/stuns stay at 0.
 
-**Today:** a separate window you alt-tab to after the game.
+### P7. Recalculate fantasy with different weights
 
-**Would mean:** while you are in Dota (queue, draft, or match), a panel draws on top of the client and reads live game events. That is what DotaPlus actually is.
+**API:** none. Match stats are already in SQLite (`kills`, `deaths`, `gpm`, …).
 
-This is a different product. It needs Overwolf's SDK or Valve's Game State Integration, plus running Dota. This repo cannot do it with pywebview. High effort, Windows-centric, and Valve has already gutted some draft-intel overlays.
+**Would mean:** presets (OpenDota, OpenDota+assists which we use now) and a numbers table. Re-sum the current span. No re-download unless a field was never projected.
 
-### P2. Auto-detect the local Steam account
+### P8. Export the current span
 
-**Today:** every Coach lookup starts with you typing a name or account ID.
+**API:** none. Dump cache.
 
-**Would mean:** on launch, read the Steam install / `loginusers.vdf` / Dota userdata on this machine, map it to a 32-bit OpenDota ID, and prefill "you" as the default player. You would still add other people by search. Fails if Steam is not installed or the profile is private on OpenDota.
+**Would mean:** CSV of roster + match_id + hero + KDA + points + `start_time` for the active span.
 
-### P3. Opacity slider and click-through
+### P9. Filter ranked / drop turbo
 
-**Today:** Pin only toggles always-on-top. The window is fully opaque and fully clickable.
+**API fields we already project:** `lobby_type`, `game_mode`. Constants: ranked is `lobby_type` 7 (also 5/6 legacy). Turbo is `game_mode` 23. OpenDota also accepts query `significant=1`, `lobby_type=7`, `game_mode=22` on `GET /players/{id}/matches`.
 
-**Would mean:** a slider from ~30% to 100% opacity, plus a "click-through" toggle so mouse clicks pass into Dota while the panel stays visible. Useful if you park it over the scoreboard. Still not a real overlay; it is window-manager chrome on the existing pywebview window.
+**Would mean:** checkboxes on Fantasy. Filter cached rows (and optionally refetch with those query params). Turbo 20-kill games stop beating ranked 45-minute games. Highest-leverage small change.
 
-### P4. Role-aware coaching (pos 1-5)
+### P10. Poll for new games
 
-**Today:** the model sees lane (safe/mid/off/jungle when OpenDota has `lane_role`) and the stats dump. It does not know if you queued as pos 4 or a greedy pos 3. Advice is generic "this player's game."
+**API:** `GET /players/{id}/recentMatches` or `GET /players/{id}/matches?limit=1`. Compare `match_id` to cache.
 
-**Would mean:** you pick a position (or we infer it from lane + farm + wards), and the prompt changes. Pos 5 gets warding, pull timing, save usage. Pos 1 gets item timings and when to leave jungle. Same match, different plan. Does not require live Dota.
+**Would mean:** a timer while the app is open. New ID → score → update the row. Delay is "OpenDota ingested the match", not live. Rate limit: ~60 req/min without a key. A 10-player roster every 2 minutes is fine. A 50-player roster every 30 seconds is not.
 
-### P5. OpenDota peer benchmarks
+## Cut (not OpenDota)
 
-**Today:** the brief has raw GPM, XPM, wards, damage. The model guesses whether 520 GPM is good.
+| Old ID | Why it is cut |
+| --- | --- |
+| P1 in-game overlay | Needs Overwolf or Valve GSI. Not this API. |
+| P2 auto Steam account | Reads local Steam files. OpenDota cannot tell whose PC this is. |
+| P3 opacity / click-through | Window manager. No extra match data. |
 
-**Would mean:** pull OpenDota `benchmarks` for that match (percentiles vs same-rank players on that hero) and put "GPM 72nd percentile, obs 20th" into the brief. The grade would be relative to the lobby rank, not vibes. Only works when OpenDota attached benchmarks to the match.
+## If you only pick a few
 
-### P6. Request a replay parse when unparsed
+**P9, P5, P6, P4.** P9 is filter math. P5 is fields we already download and throw away. P6 is the official parse endpoint. P4 is `lane_role` plus farm/ward heuristics.
 
-**Today:** if OpenDota never parsed the replay, Coach and Fantasy lose stuns, teamfight %, observer wards, stacks, runes. Those terms score as 0. We do not ask OpenDota to parse.
-
-**Would mean:** a "Parse this match" button that POSTs OpenDota's parse job, waits or polls, then re-scores / re-coaches. Parses are rate-limited and can take minutes. Without this, turbo and fresh pubs often look weaker than they were.
-
-### P7. Custom fantasy weights
-
-**Today:** one hardcoded table (OpenDota + 0.15 assists). Every tracked player uses it.
-
-**Would mean:** a small settings panel: presets (OpenDota, Liquipedia/TI with assists, "kills-heavy") plus editable numbers. Recalculate the current span from cached match stats without re-downloading. Needed if your league's sheet does not match OpenDota.
-
-### P8. CSV export of the current span
-
-**Today:** numbers live in the overlay and in SQLite. No file out.
-
-**Would mean:** Export downloads `player, match_id, hero, k/d/a, points, date` for whoever is on the roster and the current span, so you can paste into Google Sheets. No new data; it dumps what Refresh already stored.
-
-### P9. Ranked-only / no-turbo filter
-
-**Today:** history is fetched with `significant=0`, so turbo, unranked, and botches all score. A 12-minute turbo 20-kill game can beat a ranked 45-minute 8-kill game.
-
-**Would mean:** checkboxes on the Fantasy bar: Ranked only, hide Turbo, maybe All Pick only. Filter uses `lobby_type` / `game_mode` already stored on each cached match. Recalculate totals. This is the highest-leverage small fantasy change if you care about "real" games.
-
-### P10. Notify when a tracked player finishes a match
-
-**Today:** the board is stale until you click Refresh. No polling.
-
-**Would mean:** a background timer (every 1-2 minutes) that asks OpenDota for each roster account's latest match ID. If a new one appears, score it, bump totals, and flash the row or a desktop notification. Uses more API quota as the roster grows. Not live in-game; it is "they popped in OpenDota a few minutes after the game."
-
-## Suggested order if you only want useful ones
-
-If this is a post-game companion (what we actually have): **P9, P4, P5, P7, P8**.
-
-If you want it to feel like DotaPlus during a match: **P1** is the real one, and it is a rebuild. P3 is a cheap fake. P2 is quality-of-life either way.
-
-Send IDs to build, for example `approve P9 P4 P5`.
+Send IDs, for example `approve P9 P5 P6`.

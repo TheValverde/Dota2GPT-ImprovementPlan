@@ -35,4 +35,4 @@ flowchart LR
 | `dota2_coach/analysis/` | LLM coach |
 | `dota2_coach/web/static/` | Overlay chrome, Coach tab, Fantasy tab |
 
-This is a companion window, not an in-game Overwolf hook. It does not read the live draft. That path is listed under [proposals](proposals.md).
+This is a companion window, not an in-game Overwolf hook. It does not read the live draft. Live-client features are out of scope; see [proposals](proposals.md) for what OpenDota actually allows.
