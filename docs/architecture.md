@@ -34,7 +34,11 @@ flowchart LR
 | `dota2_coach/fantasy/field.py` | Ranked lobby comparison and duo detection |
 | `dota2_coach/opendota/parse_jobs.py` | OpenDota parse submit helper |
 | `dota2_coach/opendota/` | Match, search, profile, projected match history, parse jobs |
+| `dota2_coach/opendota/parsed.py` | Latest parsed match from `version` on history rows |
 | `dota2_coach/opendota/roles.py` | Lane/farm assignment from OpenDota fields |
+| `dota2_coach/opendota/lanes.py` | Safelane vs offlane matchup (map side, not same `lane_role`) |
+| `dota2_coach/opendota/timeline.py` | Compact towers, Roshan, fights, and gold swing for the coach brief |
+| `dota2_coach/opendota/abilities.py` | Ability target names for the focus player |
 | `dota2_coach/opendota/benchmarks.py` | Match percentiles and hero-curve interpolation |
 | `dota2_coach/opendota/filters.py` | Ranked-only and hide-turbo fantasy filters |
 | `dota2_coach/analysis/` | LLM coach |

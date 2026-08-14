@@ -1,15 +1,25 @@
 from __future__ import annotations
 
-from time import time
 from typing import Any
 
 from dota2_coach.analysis.coach import MatchCoach
 from dota2_coach.analysis.schema import CoachReport
 from dota2_coach.config import Settings
-from dota2_coach.errors import OpenDotaError
+from dota2_coach.errors import (
+    AccountIdRequiredError,
+    OpenDotaError,
+    ParsedMatchNotFoundError,
+)
 from dota2_coach.opendota.client import OpenDotaClient
+from dota2_coach.opendota.constants import GameConstants
 from dota2_coach.opendota.normalize import build_match_brief, find_focus_player
-from dota2_coach.opendota.parse_jobs import REPLAY_RETENTION_SECONDS, submit_parse
+from dota2_coach.opendota.parsed import (
+    PARSED_LOOKBACK,
+    account_id_from_player,
+    first_parsed,
+    is_parsed,
+)
+from dota2_coach.opendota.parse_jobs import replay_may_have_expired, submit_parse
 
 
 class AnalysisPipeline:
@@ -20,7 +30,16 @@ class AnalysisPipeline:
             api_key=settings.opendota_api_key,
         )
 
-    def analyze(self, player: str, match_id: int) -> tuple[dict[str, Any], CoachReport]:
+    def analyze(
+        self, player: str, match_id: int | None = None
+    ) -> tuple[dict[str, Any], CoachReport]:
+        if match_id is None:
+            account_id = account_id_from_player(player)
+            if account_id is None:
+                raise AccountIdRequiredError()
+            found = self.latest_parsed_match(account_id)
+            match_id = int(found["match_id"])
+            player = str(account_id)
         brief = self.build_brief(player, match_id)
         coach = MatchCoach(self._settings.openai_api_key, self._settings.openai_model)
         report = coach.analyze(brief)
@@ -42,8 +61,7 @@ class AnalysisPipeline:
                 except OpenDotaError:
                     hero_curve = None
         brief = build_match_brief(match, player, constants, hero_benchmarks=hero_curve)
-        start_time = match.get("start_time")
-        if start_time and int(time()) - int(start_time) > REPLAY_RETENTION_SECONDS:
+        if replay_may_have_expired(match.get("start_time")):
             brief["replay_may_have_expired"] = True
         return brief
 
@@ -68,22 +86,36 @@ class AnalysisPipeline:
 
     def recent_matches(self, account_id: int) -> list[dict[str, Any]]:
         constants = self.opendota.load_constants()
-        rows = self.opendota.recent_matches(account_id)
-        summarized: list[dict[str, Any]] = []
-        for row in rows:
-            summarized.append(
-                {
-                    "match_id": row.get("match_id"),
-                    "hero": constants.hero_name(row.get("hero_id")),
-                    "kills": row.get("kills"),
-                    "deaths": row.get("deaths"),
-                    "assists": row.get("assists"),
-                    "won": bool(row.get("radiant_win") == ((row.get("player_slot") or 0) < 128))
-                    if row.get("radiant_win") is not None
-                    else None,
-                    "duration": row.get("duration"),
-                    "game_mode": constants.game_mode_name(row.get("game_mode")),
-                    "start_time": row.get("start_time"),
-                }
+        return [
+            self._summarize_match_row(row, constants)
+            for row in self.opendota.recent_matches(account_id)
+        ]
+
+    def latest_parsed_match(self, account_id: int) -> dict[str, Any]:
+        constants = self.opendota.load_constants()
+        parsed = first_parsed(self.opendota.recent_matches(account_id))
+        if parsed is None:
+            parsed = first_parsed(
+                self.opendota.player_matches(account_id, limit=PARSED_LOOKBACK)
             )
-        return summarized
+        if parsed is None:
+            raise ParsedMatchNotFoundError(account_id)
+        return self._summarize_match_row(parsed, constants)
+
+    def _summarize_match_row(
+        self, row: dict[str, Any], constants: GameConstants
+    ) -> dict[str, Any]:
+        return {
+            "match_id": row.get("match_id"),
+            "hero": constants.hero_name(row.get("hero_id")),
+            "kills": row.get("kills"),
+            "deaths": row.get("deaths"),
+            "assists": row.get("assists"),
+            "won": bool(row.get("radiant_win") == ((row.get("player_slot") or 0) < 128))
+            if row.get("radiant_win") is not None
+            else None,
+            "duration": row.get("duration"),
+            "game_mode": constants.game_mode_name(row.get("game_mode")),
+            "start_time": row.get("start_time"),
+            "parsed": is_parsed(row),
+        }

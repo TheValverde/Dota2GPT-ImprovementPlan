@@ -14,7 +14,14 @@ from dota2_coach.opendota.labels import (
     lane_label,
     rank_label,
 )
+from dota2_coach.opendota.abilities import (
+    named_ability_targets,
+    named_counts,
+    npc_hero_label,
+)
+from dota2_coach.opendota.lanes import describe_lane_matchup
 from dota2_coach.opendota.roles import infer_assignment
+from dota2_coach.opendota.timeline import build_macro
 
 def find_focus_player(players: list[dict[str, Any]], query: str) -> dict[str, Any]:
     needle = query.strip()
@@ -62,6 +69,28 @@ def _available_names(players: list[dict[str, Any]]) -> list[str]:
         elif account_id:
             names.append(str(account_id))
     return names
+
+
+def _ward_times(player: dict[str, Any], limit: int = 12) -> list[dict[str, Any]]:
+    events: list[tuple[int, str]] = []
+    for kind, log in (
+        ("observer", player.get("obs_log")),
+        ("sentry", player.get("sen_log")),
+    ):
+        if not isinstance(log, list):
+            continue
+        for entry in log:
+            if not isinstance(entry, dict) or entry.get("time") is None:
+                continue
+            try:
+                events.append((int(entry["time"]), kind))
+            except (TypeError, ValueError):
+                continue
+    events.sort(key=lambda item: item[0])
+    return [
+        {"type": kind, "time": format_duration(seconds)}
+        for seconds, kind in events[:limit]
+    ]
 
 
 def _item_slots(player: dict[str, Any], constants: GameConstants) -> list[str]:
@@ -139,6 +168,32 @@ def _clean_player(
     }
     if include_purchases:
         cleaned["early_purchases"] = _purchases(player)
+        uses = named_counts(player.get("ability_uses"))
+        if uses:
+            cleaned["ability_uses"] = uses
+        targets = named_ability_targets(player.get("ability_targets"))
+        if targets:
+            cleaned["ability_targets"] = targets
+        kills = player.get("kills_log")
+        if isinstance(kills, list) and kills:
+            cleaned["kill_times"] = [
+                {
+                    "time": format_duration(entry.get("time")),
+                    "hero": npc_hero_label(entry.get("key")) or "unknown",
+                }
+                for entry in kills[:16]
+                if isinstance(entry, dict)
+            ]
+        ward_log = _ward_times(player)
+        if ward_log:
+            cleaned["ward_log"] = ward_log
+        killed = player.get("killed") if isinstance(player.get("killed"), dict) else {}
+        try:
+            couriers = int(killed.get("npc_dota_courier") or 0)
+        except (TypeError, ValueError):
+            couriers = 0
+        if couriers:
+            cleaned["courier_kills"] = couriers
     return {key: value for key, value in cleaned.items() if value not in (None, [], {})}
 
 
@@ -161,6 +216,8 @@ def build_match_brief(
     assignment = infer_assignment(focus, teammates)
     focus_clean["assignment"] = assignment["label"]
     focus_clean["assignment_basis"] = assignment["basis"]
+    matchup = describe_lane_matchup(focus, players, constants.hero_name)
+    focus_clean.update(matchup)
 
     match_benchmarks = extract_match_benchmarks(focus)
     if match_benchmarks:
@@ -184,7 +241,7 @@ def build_match_brief(
         _clean_player(player, constants, radiant_win, include_purchases=False)
         for player in players
     ]
-    return {
+    brief = {
         "match_id": match.get("match_id"),
         "duration": format_duration(match.get("duration")),
         "duration_seconds": match.get("duration"),
@@ -201,3 +258,7 @@ def build_match_brief(
         "focus_player": focus_clean,
         "scoreboard": scoreboard,
     }
+    macro = build_macro(match, constants, focus)
+    if macro:
+        brief["macro"] = macro
+    return brief

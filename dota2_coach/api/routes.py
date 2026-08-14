@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from dota2_coach.api.schemas import AnalyzeRequest, AnalyzeResponse, PlayerSearchResult, RecentMatch
 from dota2_coach.errors import (
+    AccountIdRequiredError,
     CoachError,
     MatchNotFoundError,
     OpenAINotConfiguredError,
+    ParsedMatchNotFoundError,
     PlayerNotInMatchError,
 )
 from dota2_coach.pipeline import AnalysisPipeline
@@ -43,6 +45,19 @@ def recent_matches(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+@router.get("/players/{account_id}/parsed-match", response_model=RecentMatch)
+def parsed_match(
+    account_id: int,
+    pipeline: AnalysisPipeline = Depends(get_pipeline),
+) -> RecentMatch:
+    try:
+        return RecentMatch.model_validate(pipeline.latest_parsed_match(account_id))
+    except ParsedMatchNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except CoachError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
 @router.post("/analyze", response_model=AnalyzeResponse)
 def analyze(
     body: AnalyzeRequest,
@@ -52,6 +67,10 @@ def analyze(
         brief, report = pipeline.analyze(body.player, body.match_id)
     except OpenAINotConfiguredError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except AccountIdRequiredError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ParsedMatchNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except MatchNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except PlayerNotInMatchError as exc:

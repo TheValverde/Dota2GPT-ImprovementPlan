@@ -5,7 +5,11 @@ from dota2_coach.analysis.schema import CoachReport
 
 class AnalyzeRequest(BaseModel):
     player: str = Field(min_length=1, description="Persona name or OpenDota account ID")
-    match_id: int = Field(gt=0)
+    match_id: int | None = Field(
+        default=None,
+        gt=0,
+        description="Omit to coach the latest parsed match for an account ID",
+    )
 
 
 class AnalyzeResponse(BaseModel):
@@ -30,6 +34,7 @@ class RecentMatch(BaseModel):
     duration: int | None = None
     game_mode: str | None = None
     start_time: int | None = None
+    parsed: bool = False
 
 
 class RefreshFantasyRequest(BaseModel):

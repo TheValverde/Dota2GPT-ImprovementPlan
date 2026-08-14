@@ -16,7 +16,11 @@ OpenDota player search. `q` must be at least 2 characters.
 
 ### `GET /api/players/{account_id}/recent-matches`
 
-Recent games with hero names.
+Recent games with hero names and a `parsed` flag (`version` present on the OpenDota row).
+
+### `GET /api/players/{account_id}/parsed-match`
+
+Newest game with a replay parse in recent matches, then the last 50 `GET /players/{id}/matches` rows. 404 if none.
 
 ### `POST /api/analyze`
 
@@ -24,9 +28,12 @@ Recent games with hero names.
 { "player": "PersonaName or account id", "match_id": 1234567890 }
 ```
 
+`match_id` is optional. If omitted, `player` must be an OpenDota account ID and the coach uses that player's latest parsed match.
+
 | Status | When |
 | --- | --- |
-| 404 | Match missing, or player not in the lobby |
+| 400 | Latest-parsed requested without an account ID |
+| 404 | Match missing, player not in the lobby, or no parsed match in recent games |
 | 503 | `OPENAI_API_KEY` is unset |
 | 502 | OpenDota request failed |
 

@@ -171,6 +171,11 @@ select:focus {
   flex-wrap: wrap;
 }
 
+.actions .ghost {
+  border-color: var(--line);
+  color: var(--gold);
+}
+
 button {
   border: 0;
   background: var(--gold);
@@ -264,6 +269,21 @@ button:disabled {
 
 .match-chip.loss {
   border-color: #7a2d2d;
+}
+
+.match-chip.parsed {
+  box-shadow: inset 0 0 0 1px #f0c14b;
+}
+
+.parse-tag {
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.match-chip.unparsed .parse-tag {
+  color: var(--muted);
 }
 
 .output {

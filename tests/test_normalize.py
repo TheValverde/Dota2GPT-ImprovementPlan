@@ -47,6 +47,35 @@ def test_build_match_brief_uses_names(sample_match: dict, constants: GameConstan
     assert brief["focus_player"]["assignment"] == "Safe core"
     assert brief["focus_player"]["benchmarks"]["gold_per_min"]["percentile"] == 72
     assert brief["focus_player"]["benchmark_source"] == "match"
+    assert "safelane" in brief["focus_player"]["lane_matchup_note"].lower()
+
+
+def test_build_match_brief_pairs_safelane_against_offlane(
+    sample_match: dict, constants: GameConstants
+) -> None:
+    offlaner = {
+        "account_id": 555,
+        "personaname": "EnemyOff",
+        "hero_id": 14,
+        "player_slot": 129,
+        "isRadiant": False,
+        "lane": 1,
+        "lane_role": 3,
+        "kills": 3,
+        "deaths": 5,
+        "assists": 8,
+        "gold_per_min": 400,
+        "last_hits": 140,
+    }
+    match = dict(sample_match)
+    match["players"] = [*sample_match["players"], offlaner]
+    carry = dict(sample_match["players"][0])
+    carry["lane"] = 1
+    match["players"][0] = carry
+    brief = build_match_brief(match, "TestCarry", constants)
+    against = {row["name"] for row in brief["focus_player"]["laned_against"]}
+    assert against == {"EnemyOff"}
+    assert brief["focus_player"]["map_lane"] == "Bottom"
 
 
 def test_build_match_brief_uses_hero_curve_without_match_benchmarks(
@@ -67,3 +96,40 @@ def test_build_match_brief_uses_hero_curve_without_match_benchmarks(
     brief = build_match_brief(match, "TestCarry", constants, hero_benchmarks=curve)
     assert brief["focus_player"]["benchmark_source"] == "hero_curve"
     assert brief["focus_player"]["benchmarks"]["gold_per_min"]["percentile"] == 74
+
+
+def test_build_match_brief_includes_spell_targets_and_macro(
+    sample_match: dict, constants: GameConstants
+) -> None:
+    player = dict(sample_match["players"][0])
+    player["ability_targets"] = {
+        "bane_fiends_grip": {"npc_dota_hero_drow_ranger": 2},
+        "bane_enfeeble": {"npc_dota_hero_crystal_maiden": 1},
+    }
+    player["ability_uses"] = {"bane_fiends_grip": 2, "bane_enfeeble": 1}
+    player["obs_log"] = [{"time": -39}]
+    player["sen_log"] = [{"time": -11}]
+    player["killed"] = {"npc_dota_courier": 2}
+    match = dict(sample_match)
+    match["players"] = [player, *sample_match["players"][1:]]
+    match["objectives"] = [
+        {
+            "time": 393,
+            "type": "building_kill",
+            "key": "npc_dota_goodguys_tower1_bot",
+            "slot": 0,
+        },
+        {
+            "time": 114,
+            "type": "CHAT_MESSAGE_COURIER_LOST",
+            "team": 2,
+            "killer": 0,
+        },
+    ]
+    match["radiant_gold_adv"] = [0, -500, -2000]
+    brief = build_match_brief(match, "TestCarry", constants)
+    assert brief["focus_player"]["ability_targets"]["bane_fiends_grip"]["Drow Ranger"] == 2
+    assert brief["focus_player"]["courier_kills"] == 2
+    assert brief["focus_player"]["ward_log"][0] == {"type": "observer", "time": "-0:39"}
+    assert any(row["event"] == "Courier Lost" for row in brief["macro"]["objectives"])
+    assert brief["macro"]["winner"] == "Radiant"

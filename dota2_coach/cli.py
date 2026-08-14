@@ -24,7 +24,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     analyze = sub.add_parser("analyze", help="Print a coaching report as JSON")
     analyze.add_argument("--player", required=True, help="Persona name or account ID")
-    analyze.add_argument("--match", required=True, type=int, dest="match_id")
+    analyze.add_argument(
+        "--match",
+        type=int,
+        dest="match_id",
+        help="Match ID. Omit with an account ID to coach the latest parsed game.",
+    )
     return parser
 
 
