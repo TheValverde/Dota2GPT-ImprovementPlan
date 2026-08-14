@@ -37,9 +37,15 @@ flowchart LR
 | `dota2_coach/opendota/parsed.py` | Latest parsed match from `version` on history rows |
 | `dota2_coach/opendota/roles.py` | Lane/farm assignment from OpenDota fields |
 | `dota2_coach/opendota/lanes.py` | Safelane vs offlane matchup (map side, not same `lane_role`) |
-| `dota2_coach/opendota/timeline.py` | Compact towers, Roshan, fights, and gold swing for the coach brief |
-| `dota2_coach/opendota/opening.py` | First eight minutes as one clock: focus wards, courier snipes, hero kills, towers. `map_opening` is the other lanes in that window |
+| `dota2_coach/opendota/timeline.py` | Compact teamfights and gold swing for the coach brief |
+| `dota2_coach/opendota/ledger.py` | Whole game on one clock: kills, towers, Roshan, couriers, focus wards with map regions, runes, items |
+| `dota2_coach/opendota/windows.py` | Objective windows (kills around each tower/Roshan), death windows (cost of each focus death), gold swings |
+| `dota2_coach/opendota/phases.py` | Laning, midgame, closing summaries |
 | `dota2_coach/opendota/lane_swing.py` | Gold/XP/CS gap vs the lane opponent after early kills, plus that opponent's first kill and items |
+| `dota2_coach/opendota/form.py` | Recent-form summary from the player's match history |
+| `dota2_coach/analysis/coverage.py` | Coverage checklist and repair pass so reports never skip deaths, lost objectives, or gold swings |
+| `dota2_coach/analysis/ability_facts.py` | Curated hero mechanics injected for the ten heroes in the lobby |
+| `dota2_coach/analysis/rubrics.py` | Role rubrics the grade is checked against |
 | `dota2_coach/opendota/abilities.py` | Ability target names for the focus player |
 | `dota2_coach/opendota/benchmarks.py` | Match percentiles and hero-curve interpolation |
 | `dota2_coach/opendota/filters.py` | Ranked-only and hide-turbo fantasy filters |

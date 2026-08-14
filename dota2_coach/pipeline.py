@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from dota2_coach.analysis.ability_facts import ABILITY_FACTS_NOTE, facts_for_heroes
 from dota2_coach.analysis.coach import MatchCoach
+from dota2_coach.analysis.rubrics import rubric_for
 from dota2_coach.analysis.schema import CoachReport
 from dota2_coach.config import Settings
 from dota2_coach.errors import (
@@ -12,6 +14,7 @@ from dota2_coach.errors import (
 )
 from dota2_coach.opendota.client import OpenDotaClient
 from dota2_coach.opendota.constants import GameConstants
+from dota2_coach.opendota.form import FORM_NOTE, build_recent_form
 from dota2_coach.opendota.normalize import build_match_brief, find_focus_player
 from dota2_coach.opendota.parsed import (
     PARSED_LOOKBACK,
@@ -63,7 +66,33 @@ class AnalysisPipeline:
         brief = build_match_brief(match, player, constants, hero_benchmarks=hero_curve)
         if replay_may_have_expired(match.get("start_time")):
             brief["replay_may_have_expired"] = True
+        self._augment_brief(brief, constants, match_id)
         return brief
+
+    def _augment_brief(
+        self, brief: dict[str, Any], constants: GameConstants, match_id: int
+    ) -> None:
+        focus = brief.get("focus_player") or {}
+        rubric = rubric_for(focus.get("assignment"))
+        if rubric:
+            brief["rubric"] = rubric
+        heroes = [str(row.get("hero") or "") for row in brief.get("scoreboard") or []]
+        facts = facts_for_heroes(heroes)
+        if facts:
+            brief["ability_facts"] = facts
+            brief["ability_facts_note"] = ABILITY_FACTS_NOTE
+        account_id = focus.get("account_id")
+        if account_id:
+            try:
+                rows = self.opendota.player_matches(int(account_id), limit=20)
+            except OpenDotaError:
+                rows = []
+            form = build_recent_form(
+                rows, constants, exclude_match_id=match_id
+            )
+            if form:
+                brief["recent_form"] = form
+                brief["form_note"] = FORM_NOTE
 
     def start_parse(self, match_id: int) -> dict[str, Any]:
         match = self.opendota.get_match(match_id)

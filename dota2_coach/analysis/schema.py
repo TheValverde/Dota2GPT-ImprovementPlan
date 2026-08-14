@@ -11,14 +11,12 @@ class CoachReport(BaseModel):
     headline: str = Field(description="One sharp sentence about this player's game.")
     match_read: str = Field(
         description=(
-            "Two to four paragraphs. Start from opening_sequence when present. "
-            "If a pre-lane observer, courier snipes, and lane-opponent kills sit "
-            "in that order, write them as one causal chain. If the focus player "
-            "gets early lane kills, write what those deaths bought (gold, XP, "
-            "who could leave) and what happened to that opponent for the rest "
-            "of the game, then continue through towers, Roshan, gold swing, and "
-            "who showed in fights. Place the focus player inside those moments. "
-            "Do not summarize only their KDA."
+            "Three to five paragraphs walking the game in clock order from "
+            "event_ledger and phases. Write causal chains: vision to courier "
+            "kills to lane kills, early kills to the swing they bought, fights "
+            "to the objectives they cost or paid for. Cover every focus death "
+            "with its cost and every objective the focus team lost. Place the "
+            "focus player inside those moments. Do not summarize only their KDA."
         )
     )
     grade: str = Field(description="Letter grade from S, A, B, C, D, or F.")
@@ -28,9 +26,10 @@ class CoachReport(BaseModel):
     game_timeline: list[str] = Field(
         default_factory=list,
         description=(
-            "Chronological beats with timestamps. First beats must follow "
-            "opening_sequence when it is present. Include teammate and enemy "
-            "actions, not only the focus player."
+            "Chronological beats with timestamps, following event_ledger. "
+            "Include every focus death and every objective the focus team "
+            "lost. Include teammate and enemy actions, not only the focus "
+            "player."
         ),
     )
     strengths: list[str] = Field(default_factory=list)

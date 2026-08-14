@@ -2,7 +2,7 @@ from dota2_coach.opendota.constants import GameConstants
 from dota2_coach.opendota.timeline import build_macro, compact_teamfights
 
 
-def test_macro_includes_towers_fights_and_gold() -> None:
+def test_macro_includes_fights_and_gold() -> None:
     constants = GameConstants(heroes={3: "Bane", 6: "Drow Ranger", 135: "Dawnbreaker"})
     bane = {"hero_id": 3, "player_slot": 128, "account_id": 1}
     drow = {"hero_id": 6, "player_slot": 0, "account_id": 2}
@@ -10,16 +10,14 @@ def test_macro_includes_towers_fights_and_gold() -> None:
     match = {
         "radiant_win": False,
         "radiant_gold_adv": [0, 100, -800, -2000, -4000, -9000],
-        "players": [drow, {"hero_id": 1, "player_slot": 1}, {"hero_id": 1, "player_slot": 2}, {"hero_id": 1, "player_slot": 3}, {"hero_id": 1, "player_slot": 4}, bane, dawn],
-        "objectives": [
-            {"time": 393, "type": "building_kill", "key": "npc_dota_goodguys_tower1_bot", "slot": 6},
-            {
-                "time": 114,
-                "type": "CHAT_MESSAGE_COURIER_LOST",
-                "team": 2,
-                "killer": 128,
-            },
-            {"time": 1438, "type": "CHAT_MESSAGE_ROSHAN_KILL"},
+        "players": [
+            drow,
+            {"hero_id": 1, "player_slot": 1},
+            {"hero_id": 1, "player_slot": 2},
+            {"hero_id": 1, "player_slot": 3},
+            {"hero_id": 1, "player_slot": 4},
+            bane,
+            dawn,
         ],
         "teamfights": [
             {
@@ -39,13 +37,9 @@ def test_macro_includes_towers_fights_and_gold() -> None:
     }
     macro = build_macro(match, constants, bane)
     assert macro["winner"] == "Dire"
-    assert macro["objectives"][0]["by"] == "Dawnbreaker"
-    assert "tower1 bot" in macro["objectives"][0]["building"]
-    courier = next(row for row in macro["objectives"] if row["event"] == "Courier Lost")
-    assert courier["by"] == "Bane"
-    assert courier["courier_team"] == "Radiant"
     fights = compact_teamfights(match, constants, bane)
     assert fights[0]["focus_damage"] == 389
     assert fights[0]["focus_died"] is False
     assert "Drow Ranger" in fights[0]["died"]
     assert macro["gold_advantage"][0]["leading"] == "Even"
+    assert "objectives" not in macro

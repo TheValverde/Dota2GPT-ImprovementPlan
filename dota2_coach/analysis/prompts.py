@@ -8,27 +8,37 @@ If a field is missing, do not invent replay-level details you cannot see.
 
 The brief includes an inferred assignment (Safe core, Safe support, Mid, Offlane, Off support, Roam, Jungle).
 That label comes from OpenDota lane_role plus farm and wards. It is not Valve ranked role queue.
-Coach to that assignment. If benchmarks are present, treat percentiles as this hero's overall OpenDota curve, not the player's medal.
-Lane matchup rule: safelane faces the enemy offlane, offlane faces the enemy safelane, mid faces mid.
+Coach to that assignment. If a rubric is present, grade against it point by point.
+If benchmarks are present, treat percentiles as this hero's overall OpenDota curve, not the player's medal.
+
+Lane matchup rules: safelane faces the enemy offlane, offlane faces the enemy safelane, mid faces mid.
 OpenDota lane_role is Safe/Mid/Off for that player's team, not the map side. Dire safelane is top. Radiant safelane is bottom.
-The same lane_role on the other team is the opposite lane. Never coach the lane as if those heroes were across from the focus player.
-Use focus_player.laned_against as the lane opponents. Use laned_with as the lane partner.
+Use focus_player.laned_against as the lane opponents and laned_with as the lane partner.
 If first blood is on a hero in laned_against, that is a lane kill, not a roam.
 
-Start from opening_sequence when it is present. Walk those rows in clock order. If the focus player's observer sits before their courier_kill rows, and those sit before hero_kill rows on laned_against heroes, that is one play. The ward is how the courier was seen. The dead couriers are why the lane then dies: no regen, delayed items. Then the heroes die. Do not mention the observer in one sentence, the courier snipes in another section, and the lane-opponent kills as a separate recap. opening_note repeats this rule. Courier Lost rows in macro include `by` and `courier_team`.
-
-Early kills on the lane opponent are a swing, not a score. Use lane_swing. After those deaths, say the gold and XP lead, what the opponent delayed, and who could leave first. If last hits equalize later, they farmed an empty wave. If they take a T1 while the focus player is fighting elsewhere, that tower is the tax for leaving, not the opponent winning the lane. Follow that opponent for the rest of the game: first kill time and items say whether they ever became a hero. Use map_opening for the other lanes at the same time. If a teammate is also winning, the opponent cannot rotate, and the focus player's later rotations are a consequence of that map.
-
-Write the report as a game story, not a KDA sheet. Walk towers, Roshan, gold swings, who showed in teamfights, and what teammates and enemies were doing. Place the focus player inside those moments. The macro block (objectives, teamfights, gold_advantage) is the spine of the recap.
+How to read the data blocks:
+- event_ledger is the whole game on one clock. Read it in order and chain rows that sit together. A ward, then courier kills, then kills on the lane opponents is one play, not three facts. Rows with focus_lane true are the focus player's own lane during the laning stage; focus_lane false rows are the rest of the map at the same time.
+- lane_swing: early kills on the lane opponent are a swing, not a score. Say what they bought (gold and XP lead, delayed items, the right to leave the lane) and follow that opponent for the rest of the game. If they take a tower while the focus player fights elsewhere, that is the tax for leaving, not the opponent winning the lane back.
+- objective_windows: every tower and Roshan with the kills around it. lost_by_focus_team plus focus_was_fighting_elsewhere means the objective was the price of a fight somewhere else; call it a trade and judge it.
+- death_windows: every focus death with its killer, the fight it happened in, the enemy gold swing after, and the item it delayed. Every focus death must appear in the report with its cost.
+- gold_swings: each listed swing needs an explanation tied to events on the clock.
+- phases: laning, midgame, closing. Use them as the spine so no stretch of the game is skipped.
+- recent_form: habits across the player's recent games. Connect repeated patterns; do not re-coach old games.
+- ability_facts: authoritative mechanics for heroes in this lobby. Prefer them over memory.
 
 Spell rules:
-- Do not recommend putting a damage-reduction or DoT debuff on a target that is already hard-disabled (Fiend's Grip, Nightmare, Chronosphere, Black Hole, and similar).
-- Enfeeble reduces attack damage and cast range. It does not reduce spell damage. Do not talk about Enfeeble as if it nerfs nukes.
-- Enfeeble into Nightmare wastes Enfeeble duration. Nightmare already takes them out of the fight.
-- If ability_targets show Grip or Nightmare on a hero, do not scold the player for skipping Enfeeble on that same hero.
-- If a hero barely shows in teamfights (low fight damage, missing from died/damage lists), missing debuffs on them are not a leak. You cannot Enfeeble someone who is not there.
+- Do not recommend putting a damage-reduction or damage-over-time debuff on a target that is already hard-disabled.
 - Low cast counts are not automatically a mistake. Ask who the spell hit, and whether that target was already disabled or absent.
+- If a hero barely shows in teamfights (low fight damage, missing from died lists), missing debuffs on them are not a leak. You cannot debuff someone who is not there.
 """
+
+
+def _rubric_lines(match_brief: dict) -> str:
+    rubric = match_brief.get("rubric") or []
+    if not rubric:
+        return ""
+    lines = "\n".join(f"- {line}" for line in rubric)
+    return f"Grade against this rubric:\n{lines}\n"
 
 
 def user_prompt(match_brief: dict) -> str:
@@ -41,13 +51,12 @@ def user_prompt(match_brief: dict) -> str:
     vs_line = f" Lane opponents: {names}." if names else ""
     return (
         f"Analyze this match for the focus player as a {assignment}.{vs_line}\n"
-        "Start match_read and game_timeline from opening_sequence when it is present. "
-        "If observer then courier_kill then lane-opponent hero_kill sit in that order, "
-        "write them as one causal chain before you leave the lane. If lane_swing has "
-        "early kills on the opponent, write the impact: gold/XP lead, delayed items, "
-        "who could rotate, and whether that opponent ever became a hero. Use "
-        "map_opening so other lanes sit in that same window. Then walk the rest "
-        "of the game from the macro block. Coach the player inside those moments, "
-        "including teammates and enemies.\n"
+        "Walk the game in clock order from event_ledger and phases. Write causal "
+        "chains, not lists: vision to courier kills to lane kills, early kills to "
+        "the swing they bought, fights to the objectives they cost or paid for.\n"
+        "Cover every entry in death_windows, every objective_windows row where "
+        "lost_by_focus_team is true, and every gold_swings row. Coach the player "
+        "inside those moments, including what teammates and enemies were doing.\n"
+        f"{_rubric_lines(match_brief)}"
         f"Match brief:\n{match_brief}"
     )

@@ -21,14 +21,16 @@ from dota2_coach.opendota.abilities import (
 )
 from dota2_coach.opendota.lanes import describe_lane_matchup
 from dota2_coach.opendota.roles import infer_assignment
-from dota2_coach.opendota.opening import (
-    MAP_OPENING_NOTE,
-    OPENING_NOTE,
-    build_map_opening,
-    build_opening_sequence,
-)
 from dota2_coach.opendota.lane_swing import build_lane_swing
+from dota2_coach.opendota.ledger import LEDGER_NOTE, build_event_ledger
+from dota2_coach.opendota.phases import PHASES_NOTE, build_phases
 from dota2_coach.opendota.timeline import build_macro
+from dota2_coach.opendota.windows import (
+    WINDOWS_NOTE,
+    build_death_windows,
+    build_gold_swings,
+    build_objective_windows,
+)
 
 def find_focus_player(players: list[dict[str, Any]], query: str) -> dict[str, Any]:
     needle = query.strip()
@@ -268,14 +270,25 @@ def build_match_brief(
     macro = build_macro(match, constants, focus)
     if macro:
         brief["macro"] = macro
-    opening = build_opening_sequence(match, constants, focus)
-    if opening:
-        brief["opening_sequence"] = opening
-        brief["opening_note"] = OPENING_NOTE
-    map_opening = build_map_opening(match, constants, focus)
-    if map_opening:
-        brief["map_opening"] = map_opening
-        brief["map_opening_note"] = MAP_OPENING_NOTE
+    ledger = build_event_ledger(match, constants, focus)
+    if ledger:
+        brief["event_ledger"] = ledger
+        brief["ledger_note"] = LEDGER_NOTE
+        objective_windows = build_objective_windows(ledger, focus)
+        if objective_windows:
+            brief["objective_windows"] = objective_windows
+        death_windows = build_death_windows(match, ledger, focus)
+        if death_windows:
+            brief["death_windows"] = death_windows
+        gold_swings = build_gold_swings(match, focus)
+        if gold_swings:
+            brief["gold_swings"] = gold_swings
+        if objective_windows or death_windows or gold_swings:
+            brief["windows_note"] = WINDOWS_NOTE
+        phases = build_phases(match, ledger, focus)
+        if phases:
+            brief["phases"] = phases
+            brief["phases_note"] = PHASES_NOTE
     swing = build_lane_swing(match, constants, focus)
     if swing:
         brief["lane_swing"] = swing
