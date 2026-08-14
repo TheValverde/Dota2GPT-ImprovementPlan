@@ -114,6 +114,29 @@ if (latestBtn) {
   });
 }
 
+function matchupHtml(focus) {
+  const against = (focus.laned_against || [])
+    .map((row) => row.hero || row.name)
+    .filter(Boolean);
+  const withHeroes = (focus.laned_with || [])
+    .map((row) => row.hero || row.name)
+    .filter(Boolean);
+  const bits = [];
+  if (focus.map_lane) {
+    bits.push(focus.map_lane);
+  }
+  if (withHeroes.length) {
+    bits.push(`with ${withHeroes.join(", ")}`);
+  }
+  if (against.length) {
+    bits.push(`vs ${against.join(", ")}`);
+  }
+  if (!bits.length) {
+    return "";
+  }
+  return ` · ${escapeHtml(bits.join(" · "))}`;
+}
+
 function listHtml(items) {
   if (!items || !items.length) {
     return "<p>None called out.</p>";
@@ -134,6 +157,7 @@ function renderReport({ brief, report }) {
           <span class="${teamClass}">${escapeHtml(focus.name || "Player")}</span>
           as ${escapeHtml(focus.hero || "unknown hero")}
           · ${escapeHtml(focus.assignment || focus.lane || "Unknown role")}
+          ${matchupHtml(focus)}
           · ${escapeHtml(result)}
           · ${escapeHtml(brief.duration || "?")}
           · Match ${escapeHtml(brief.match_id)}

@@ -34,6 +34,7 @@ flowchart LR
 | `dota2_coach/opendota/` | Match, search, profile, projected match history, parse jobs |
 | `dota2_coach/opendota/parsed.py` | Latest parsed match from `version` on history rows |
 | `dota2_coach/opendota/roles.py` | Lane/farm assignment from OpenDota fields |
+| `dota2_coach/opendota/lanes.py` | Safelane vs offlane matchup (map side, not same `lane_role`) |
 | `dota2_coach/opendota/benchmarks.py` | Match percentiles and hero-curve interpolation |
 | `dota2_coach/opendota/filters.py` | Ranked-only and hide-turbo fantasy filters |
 | `dota2_coach/analysis/` | LLM coach |

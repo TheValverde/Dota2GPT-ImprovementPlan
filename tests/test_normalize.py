@@ -47,6 +47,35 @@ def test_build_match_brief_uses_names(sample_match: dict, constants: GameConstan
     assert brief["focus_player"]["assignment"] == "Safe core"
     assert brief["focus_player"]["benchmarks"]["gold_per_min"]["percentile"] == 72
     assert brief["focus_player"]["benchmark_source"] == "match"
+    assert "safelane" in brief["focus_player"]["lane_matchup_note"].lower()
+
+
+def test_build_match_brief_pairs_safelane_against_offlane(
+    sample_match: dict, constants: GameConstants
+) -> None:
+    offlaner = {
+        "account_id": 555,
+        "personaname": "EnemyOff",
+        "hero_id": 14,
+        "player_slot": 129,
+        "isRadiant": False,
+        "lane": 1,
+        "lane_role": 3,
+        "kills": 3,
+        "deaths": 5,
+        "assists": 8,
+        "gold_per_min": 400,
+        "last_hits": 140,
+    }
+    match = dict(sample_match)
+    match["players"] = [*sample_match["players"], offlaner]
+    carry = dict(sample_match["players"][0])
+    carry["lane"] = 1
+    match["players"][0] = carry
+    brief = build_match_brief(match, "TestCarry", constants)
+    against = {row["name"] for row in brief["focus_player"]["laned_against"]}
+    assert against == {"EnemyOff"}
+    assert brief["focus_player"]["map_lane"] == "Bottom"
 
 
 def test_build_match_brief_uses_hero_curve_without_match_benchmarks(

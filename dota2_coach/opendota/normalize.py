@@ -14,6 +14,7 @@ from dota2_coach.opendota.labels import (
     lane_label,
     rank_label,
 )
+from dota2_coach.opendota.lanes import describe_lane_matchup
 from dota2_coach.opendota.roles import infer_assignment
 
 def find_focus_player(players: list[dict[str, Any]], query: str) -> dict[str, Any]:
@@ -161,6 +162,8 @@ def build_match_brief(
     assignment = infer_assignment(focus, teammates)
     focus_clean["assignment"] = assignment["label"]
     focus_clean["assignment_basis"] = assignment["basis"]
+    matchup = describe_lane_matchup(focus, players, constants.hero_name)
+    focus_clean.update(matchup)
 
     match_benchmarks = extract_match_benchmarks(focus)
     if match_benchmarks:
