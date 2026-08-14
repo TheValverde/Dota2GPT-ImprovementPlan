@@ -162,7 +162,7 @@ function fieldHtml(field) {
   const duoLine = duo
     ? `<p>Duo: <strong>${escapeHtml(duo.personaname)}</strong> · ${duo.teammate_games} games as teammate · avg ${duo.average.toFixed(1)}</p>`
     : `<p class="muted">No duo yet (needs 2+ ranked games on your team).</p>`;
-  const rows = field.players
+  const rows = (field.regulars || field.players)
     .map((row) => {
       const tag = row.relation === "you" ? "You" : row.relation === "duo" ? "Duo" : row.relation === "stack" ? "Stack" : row.relation === "enemy" ? "Enemy" : row.relation === "teammate" ? "Team" : "Lobby";
       return `<button type="button" class="field-row ${row.is_focus ? "is-you" : ""} ${row.is_duo ? "is-duo" : ""}" data-field-id="${row.account_id}">
@@ -176,10 +176,15 @@ function fieldHtml(field) {
     .join("");
   return `<section class="field-box">
     <h3>Ranked field</h3>
-    <p>Same ranked lobbies only. You are ${you.rank || "-"} of ${field.players.length} at ${Number(you.average || 0).toFixed(1)} avg over ${field.match_count} games.</p>
+    <p>Same ranked lobbies only. You are ${you.rank || "-"} of ${field.players.length} by average (${Number(you.average || 0).toFixed(1)}) over ${field.match_count} games.</p>
     ${duoLine}
     ${parseNote}
     <div class="field-table">${rows}</div>
+    ${
+      field.one_game_players
+        ? `<p class="muted">${field.one_game_players} other players appeared in only one ranked lobby with you. Cores in a single stomp will outscore a support average, so they stay off this table.</p>`
+        : ""
+    }
   </section>`;
 }
 

@@ -45,6 +45,8 @@ Filters apply to cached rows for the active span. They do not change how points 
 
 Selecting a tracked player loads a **ranked field**: every named account that loaded into that player's ranked games in the span (cap 40 newest). Points use the same formula, but only on those shared lobbies, so a duo is compared on the same games as random pub opponents.
 
+The overlay table keeps **regulars**: you, your duo, and anyone with 2+ shared ranked games. One-game cores still count toward "you are X of Y by average," but they are listed as a count so a single stomp does not bury the duo.
+
 | Label | Meaning |
 | --- | --- |
 | You | The tracked account |

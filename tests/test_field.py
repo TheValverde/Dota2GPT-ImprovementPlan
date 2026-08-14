@@ -21,6 +21,10 @@ def test_aggregate_field_scores_lobby_and_marks_duo(sample_match: dict, constant
     assert by_id[222]["enemy_games"] == 2
     assert by_id[111]["games"] == 2
     assert by_id[444]["games"] == 2
+    regular_ids = {row["account_id"] for row in field["regulars"]}
+    assert 111 in regular_ids
+    assert 444 in regular_ids
+    assert field["regulars"][0]["account_id"] == 111
 
 
 def test_ranked_field_and_parse_missing(tracker, opendota, sample_match) -> None:

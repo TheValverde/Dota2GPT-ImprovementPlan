@@ -185,6 +185,16 @@ def aggregate_ranked_field(
 
     you = next((row for row in players if row["is_focus"]), None)
     duo = next((row for row in players if row["is_duo"]), None)
+    regulars = [row for row in players if row["games"] >= DUO_MIN_GAMES or row["is_focus"]]
+    display = sorted(
+        regulars,
+        key=lambda item: (
+            not item["is_focus"],
+            not item["is_duo"],
+            -item["teammate_games"],
+            -item["average"],
+        ),
+    )
     return {
         "match_count": used_matches,
         "parsed_matches": parsed_matches,
@@ -192,4 +202,6 @@ def aggregate_ranked_field(
         "you": you,
         "duo": duo,
         "players": players,
+        "regulars": display,
+        "one_game_players": max(len(players) - len(regulars), 0),
     }
