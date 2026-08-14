@@ -6,7 +6,7 @@ Overlay companion for post-game coaching and a fantasy point board.
 - [Architecture](architecture.md)
 - [Fantasy scoring](fantasy.md)
 - [HTTP API](api.md)
-- [Proposed next upgrades](proposals.md)
+- [Proposed next upgrades](proposals.md) (what exists vs what each ID would actually change)
 
 ## Panels
 
