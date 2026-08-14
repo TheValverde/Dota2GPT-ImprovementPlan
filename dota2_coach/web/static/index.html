@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dota 2 Coach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Teko:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow">OpenDota + LLM</p>
+        <h1>Match Coach</h1>
+        <p class="lede">
+          Drop in a player and a match. Get a structured improvement plan, not a
+          generic KDA lecture.
+        </p>
+      </header>
+
+      <form id="analyze-form" class="panel">
+        <div class="field">
+          <label for="player">Player name or account ID</label>
+          <input
+            id="player"
+            name="player"
+            autocomplete="off"
+            placeholder="Persona name or 32-bit account ID"
+            required
+          />
+          <ul id="player-results" class="suggestions" hidden></ul>
+        </div>
+        <div class="field">
+          <label for="match-id">Match ID</label>
+          <input
+            id="match-id"
+            name="match_id"
+            inputmode="numeric"
+            placeholder="From OpenDota or the scoreboard"
+            required
+          />
+        </div>
+        <div class="actions">
+          <button type="submit" id="submit">Analyze match</button>
+          <p id="status" class="status" role="status"></p>
+        </div>
+        <div id="recent" class="recent" hidden>
+          <h2>Recent matches</h2>
+          <div id="recent-list" class="recent-list"></div>
+        </div>
+      </form>
+
+      <section id="output" class="output" hidden></section>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

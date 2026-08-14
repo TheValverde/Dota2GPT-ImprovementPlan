@@ -1,0 +1,11 @@
+services:
+  coach:
+    build: .
+    ports:
+      - "8765:8765"
+    env_file:
+      - .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8765
+    restart: unless-stopped
