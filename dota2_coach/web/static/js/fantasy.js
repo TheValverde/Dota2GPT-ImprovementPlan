@@ -10,11 +10,26 @@ const detailEl = document.getElementById("player-detail");
 let selectedTrackedId = null;
 let fantasyLoaded = false;
 
+const rankedOnly = document.getElementById("ranked-only");
+const hideTurbo = document.getElementById("hide-turbo");
+
 function spanParams() {
   return {
     amount: Number(spanAmount.value) || 7,
     unit: spanUnit.value,
+    ranked_only: rankedOnly.checked,
+    hide_turbo: hideTurbo.checked,
   };
+}
+
+function spanQuery() {
+  const span = spanParams();
+  return new URLSearchParams({
+    amount: String(span.amount),
+    unit: span.unit,
+    ranked_only: String(span.ranked_only),
+    hide_turbo: String(span.hide_turbo),
+  }).toString();
 }
 
 function setFantasyStatus(message, isError = false) {
@@ -36,8 +51,7 @@ function sparkHtml(values) {
 }
 
 async function loadRoster() {
-  const span = spanParams();
-  const data = await fetchJson(`/api/fantasy/roster?amount=${span.amount}&unit=${span.unit}`);
+  const data = await fetchJson(`/api/fantasy/roster?${spanQuery()}`);
   if (!data.players.length) {
     rosterEl.innerHTML = '<p class="empty-copy">Add players to start a fantasy board.</p>';
     detailEl.hidden = true;
@@ -86,8 +100,7 @@ async function loadRoster() {
 }
 
 async function loadPlayerDetail(accountId) {
-  const span = spanParams();
-  const player = await fetchJson(`/api/fantasy/players/${accountId}?amount=${span.amount}&unit=${span.unit}`);
+  const player = await fetchJson(`/api/fantasy/players/${accountId}?${spanQuery()}`);
   const matches = player.matches || [];
   detailEl.innerHTML = `
     <h2>${escapeHtml(player.personaname)}</h2>
@@ -183,8 +196,25 @@ refreshBtn.addEventListener("click", async () => {
   }
 });
 
-spanAmount.addEventListener("change", () => loadRoster().catch((error) => setFantasyStatus(error.message, true)));
-spanUnit.addEventListener("change", () => loadRoster().catch((error) => setFantasyStatus(error.message, true)));
+async function reloadFantasyBoard() {
+  await loadRoster();
+  if (selectedTrackedId) {
+    await loadPlayerDetail(selectedTrackedId);
+  }
+}
+
+spanAmount.addEventListener("change", () =>
+  reloadFantasyBoard().catch((error) => setFantasyStatus(error.message, true))
+);
+spanUnit.addEventListener("change", () =>
+  reloadFantasyBoard().catch((error) => setFantasyStatus(error.message, true))
+);
+rankedOnly.addEventListener("change", () =>
+  reloadFantasyBoard().catch((error) => setFantasyStatus(error.message, true))
+);
+hideTurbo.addEventListener("change", () =>
+  reloadFantasyBoard().catch((error) => setFantasyStatus(error.message, true))
+);
 
 document.addEventListener("fantasy-shown", async () => {
   if (fantasyLoaded) {

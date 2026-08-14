@@ -43,3 +43,27 @@ def test_build_match_brief_uses_names(sample_match: dict, constants: GameConstan
     assert brief["focus_player"]["rank"] == "Ancient 5"
     names = {row["name"] for row in brief["scoreboard"]}
     assert "Anonymous" in names
+    assert brief["parsed"] is False
+    assert brief["focus_player"]["assignment"] == "Safe core"
+    assert brief["focus_player"]["benchmarks"]["gold_per_min"]["percentile"] == 72
+    assert brief["focus_player"]["benchmark_source"] == "match"
+
+
+def test_build_match_brief_uses_hero_curve_without_match_benchmarks(
+    sample_match: dict, constants: GameConstants
+) -> None:
+    player = dict(sample_match["players"][0])
+    player.pop("benchmarks", None)
+    match = dict(sample_match)
+    match["players"] = [player, *sample_match["players"][1:]]
+    curve = {
+        "result": {
+            "gold_per_min": [
+                {"percentile": 0.5, "value": 600},
+                {"percentile": 0.8, "value": 750},
+            ]
+        }
+    }
+    brief = build_match_brief(match, "TestCarry", constants, hero_benchmarks=curve)
+    assert brief["focus_player"]["benchmark_source"] == "hero_curve"
+    assert brief["focus_player"]["benchmarks"]["gold_per_min"]["percentile"] == 74

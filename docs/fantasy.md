@@ -31,3 +31,13 @@ Rounded to one decimal, same as OpenDota.
 | `matches` | Most recent N games, newest first |
 
 The overlay lets you add any number of accounts. Refresh pulls OpenDota again for the current span. Totals, averages, best, worst, and a sparkline come from the local SQLite cache.
+
+## Filters
+
+| Checkbox | Field | Kept when |
+| --- | --- | --- |
+| Ranked only | `lobby_type` | 5, 6, or 7 (ranked, including legacy) |
+| Hide turbo | `game_mode` | anything except 23 |
+
+Filters apply to cached rows for the active span. They do not change how points are calculated. Turn both on to score ranked non-turbo games only.
+

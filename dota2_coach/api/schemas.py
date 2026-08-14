@@ -32,13 +32,17 @@ class RecentMatch(BaseModel):
     start_time: int | None = None
 
 
-class AddTrackedPlayerRequest(BaseModel):
-    account_id: int = Field(gt=0)
-    amount: int = Field(default=7, ge=1, le=365)
-    unit: str = Field(default="days")
-
-
 class RefreshFantasyRequest(BaseModel):
     account_id: int | None = None
     amount: int = Field(default=7, ge=1, le=365)
     unit: str = Field(default="days")
+    ranked_only: bool = False
+    hide_turbo: bool = False
+
+
+class AddTrackedPlayerRequest(BaseModel):
+    account_id: int = Field(gt=0)
+    amount: int = Field(default=7, ge=1, le=365)
+    unit: str = Field(default="days")
+    ranked_only: bool = False
+    hide_turbo: bool = False

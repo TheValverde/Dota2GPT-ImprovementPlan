@@ -59,3 +59,30 @@ def analyze(
     except CoachError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return AnalyzeResponse(brief=brief, report=report)
+
+
+@router.post("/matches/{match_id}/parse")
+def start_parse(
+    match_id: int,
+    pipeline: AnalysisPipeline = Depends(get_pipeline),
+) -> dict:
+    try:
+        return pipeline.start_parse(match_id)
+    except MatchNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except CoachError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/matches/{match_id}/parse-status")
+def parse_status(
+    match_id: int,
+    job_id: str = Query(min_length=1),
+    pipeline: AnalysisPipeline = Depends(get_pipeline),
+) -> dict:
+    try:
+        return pipeline.parse_status(match_id, job_id)
+    except MatchNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except CoachError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

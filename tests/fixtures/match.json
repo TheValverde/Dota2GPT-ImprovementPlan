@@ -31,10 +31,31 @@
       "item_1": 50,
       "item_2": 0,
       "rank_tier": 65,
+      "obs_placed": 1,
+      "is_roaming": false,
+      "benchmarks": {
+        "gold_per_min": {"raw": 720, "pct": 0.72},
+        "xp_per_min": {"raw": 680, "pct": 0.41},
+        "last_hits_per_min": {"raw": 6.8, "pct": 0.55}
+      },
       "purchase_log": [
         {"key": "quelling_blade", "time": -70},
         {"key": "boots", "time": 210}
       ]
+    },
+    {
+      "account_id": 444,
+      "personaname": "TestSupport",
+      "hero_id": 14,
+      "kills": 1,
+      "deaths": 9,
+      "assists": 18,
+      "last_hits": 32,
+      "gold_per_min": 240,
+      "lane_role": 1,
+      "player_slot": 1,
+      "isRadiant": true,
+      "obs_placed": 14
     },
     {
       "account_id": 222,

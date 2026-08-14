@@ -30,9 +30,24 @@ Recent games with hero names.
 | 503 | `OPENAI_API_KEY` is unset |
 | 502 | OpenDota request failed |
 
+### `POST /api/matches/{match_id}/parse`
+
+Submit an OpenDota parse job. Counts as 10 OpenDota calls. Returns `job_id` when queued, or `parsed: true` if `version` is already set.
+
+### `GET /api/matches/{match_id}/parse-status?job_id=`
+
+Poll the parse queue, then re-read the match. `queued` is false when OpenDota has dropped the job. `parsed` is true when `version` is present.
+
 ## Fantasy
 
 Span query: `amount` (1-365) and `unit` (`days`, `weeks`, `months`, `matches`).
+
+Optional filters on roster, player card, add, and refresh:
+
+| Param | Meaning |
+| --- | --- |
+| `ranked_only` | Keep `lobby_type` 5, 6, or 7 |
+| `hide_turbo` | Drop `game_mode` 23 |
 
 ### `GET /api/fantasy/roster`
 
@@ -41,7 +56,7 @@ Leaderboard for the current span.
 ### `POST /api/fantasy/roster`
 
 ```json
-{ "account_id": 111, "amount": 7, "unit": "days" }
+{ "account_id": 111, "amount": 7, "unit": "days", "ranked_only": false, "hide_turbo": true }
 ```
 
 Adds or refreshes that account.
@@ -55,7 +70,7 @@ Per-match points for the span.
 ### `POST /api/fantasy/refresh`
 
 ```json
-{ "account_id": null, "amount": 20, "unit": "matches" }
+{ "account_id": null, "amount": 20, "unit": "matches", "ranked_only": false, "hide_turbo": false }
 ```
 
 `account_id` omitted refreshes the whole roster.

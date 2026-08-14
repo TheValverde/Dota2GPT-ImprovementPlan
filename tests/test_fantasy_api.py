@@ -23,6 +23,28 @@ def test_fantasy_roster_flow(client: TestClient) -> None:
     assert leftover.json()["players"][0]["account_id"] == 222
 
 
+def test_fantasy_ranked_and_hide_turbo_query(client: TestClient) -> None:
+    client.post("/api/fantasy/roster", json={"account_id": 111, "amount": 60, "unit": "days"})
+    month = client.get("/api/fantasy/players/111", params={"amount": 2, "unit": "months"})
+    ranked = client.get(
+        "/api/fantasy/players/111",
+        params={"amount": 2, "unit": "months", "ranked_only": True},
+    )
+    no_turbo = client.get(
+        "/api/fantasy/players/111",
+        params={"amount": 2, "unit": "months", "hide_turbo": True},
+    )
+    assert month.json()["match_count"] == 2
+    assert ranked.json()["match_count"] == 1
+    assert no_turbo.json()["match_count"] == 1
+    roster = client.get(
+        "/api/fantasy/roster",
+        params={"amount": 2, "unit": "months", "hide_turbo": True},
+    )
+    assert roster.json()["filters"]["hide_turbo"] is True
+    assert roster.json()["players"][0]["match_count"] == 1
+
+
 def test_fantasy_refresh_and_bad_span(client: TestClient) -> None:
     client.post("/api/fantasy/roster", json={"account_id": 111, "amount": 7, "unit": "days"})
     refreshed = client.post(

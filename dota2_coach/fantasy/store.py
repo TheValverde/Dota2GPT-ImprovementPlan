@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from dota2_coach.fantasy.scoring import Span, score_match
+from dota2_coach.opendota.filters import FantasyFilters, match_passes_filters
 
 
 class FantasyStore:
@@ -122,7 +123,13 @@ class FantasyStore:
                     ),
                 )
 
-    def matches_for_span(self, account_id: int, span: Span, now: int) -> list[dict[str, Any]]:
+    def matches_for_span(
+        self,
+        account_id: int,
+        span: Span,
+        now: int,
+        filters: FantasyFilters | None = None,
+    ) -> list[dict[str, Any]]:
         with self._connect() as connection:
             rows = connection.execute(
                 """
@@ -135,11 +142,14 @@ class FantasyStore:
         scored: list[dict[str, Any]] = []
         days = span.as_days()
         cutoff = now - days * 86400 if days is not None else None
+        active_filters = filters or FantasyFilters()
         for row in rows:
             start_time = row["start_time"] or 0
             if cutoff is not None and start_time < cutoff:
                 continue
             payload = json.loads(row["payload"])
+            if not match_passes_filters(payload, active_filters):
+                continue
             payload["points"] = row["points"]
             payload["parsed"] = bool(row["parsed"])
             payload["won"] = None if row["won"] is None else bool(row["won"])

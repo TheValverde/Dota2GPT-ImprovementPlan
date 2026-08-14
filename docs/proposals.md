@@ -8,9 +8,9 @@ OpenDota checked against live responses and [the public API](https://docs.opendo
 
 Local companion window. Dota does not see it. No live lobby, no draft.
 
-**Coach.** `GET /matches/{match_id}` plus constants. We keep KDA, GPM/XPM, lane (`lane_role` mapped to Safe/Mid/Off/Jungle), items, and a few parse fields if present. We send that to an LLM. We **do not** pass `players[].benchmarks`, even though a parsed match returns them as `{ raw, pct }` per stat (confirmed on a live parsed match: `gold_per_min.pct` etc.).
+**Coach.** `GET /matches/{match_id}` plus constants. The brief includes KDA, GPM/XPM, items, an inferred assignment (Safe core / Safe support / Mid / Offlane / Off support / Jungle / Roam from `lane_role`, farm, and wards), and OpenDota benchmarks (`{ raw, pct }` from the match, or interpolated from `GET /benchmarks?hero_id=` when the replay is unparsed). The LLM is told to coach that assignment and treat percentiles as a hero-wide curve, not a medal bracket. If `version` is missing, the overlay can `POST /request/{match_id}`, poll `GET /request/{jobId}`, then re-analyze.
 
-**Fantasy.** `GET /players/{id}/matches` with `significant=0` (turbo and unranked included) and a projected field list. Scores with one hardcoded formula. Span is local filtering of the SQLite cache. Refresh is manual.
+**Fantasy.** `GET /players/{id}/matches` with `significant=0` and a projected field list, including `lobby_type` and `game_mode`. Scores with one hardcoded formula. Span is local filtering of the SQLite cache. Ranked-only (`lobby_type` 5/6/7) and hide-turbo (`game_mode` 23) checkboxes filter cached rows. Refresh is still manual.
 
 **Not in the API (so we will not pitch them):**
 
@@ -18,25 +18,25 @@ Local companion window. Dota does not see it. No live lobby, no draft.
 - Same-rank-only percentiles. `GET /benchmarks?hero_id=` is a **hero-wide** curve. Match `benchmarks.pct` is the same idea (where this game sits on that hero's distribution), not "Ancient 5 only".
 - Live game events. `GET /live` is pro/top games, not your client.
 
-## Feasible pitches
+## Shipped
 
 ### P4. Coach from lane and farm, not a fake pos 1-5
 
-**API:** `lane_role`, `lane`, `is_roaming`, `last_hits`, `gold_per_min`, `obs_placed` on `GET /matches/{id}` (parsed). We already map `lane_role` to a lane name.
+Inferred labels use `lane_role`, `is_roaming`, last hits, GPM, and observer wards. The prompt coaches that label. It does not print Valve pos 1-5.
 
-**Would mean:** label the player as something like "safe core", "safe support", "mid", "off", "roam" using those fields (high LH/GPM on safe lane vs high obs / low farm). Change the prompt to that label. We cannot print "you queued pos 4" because OpenDota does not expose that.
+### P5. OpenDota benchmarks in the brief
 
-### P5. Put OpenDota benchmarks in the brief
-
-**API:** parsed `GET /matches/{id}` already includes `players[].benchmarks` (`gold_per_min`, `xp_per_min`, `kills_per_min`, `last_hits_per_min`, `hero_damage_per_min`, `tower_damage`, … each `{ raw, pct }`). If the match is unparsed, `GET /benchmarks?hero_id=` returns the percentile curve and we interpolate GPM/XPM/LH ourselves.
-
-**Would mean:** the LLM sees "GPM 24th percentile on this hero", not just "470 GPM". Honest limit: hero population, not your medal.
+Parsed matches pass `players[].benchmarks`. Unparsed matches interpolate `GET /benchmarks?hero_id=`. The overlay shows percentile plus raw value, with a note that the curve is hero-wide.
 
 ### P6. Request a parse, then reload
 
-**API:** `POST /request/{match_id}` (OpenDota counts this as **10** rate-limit calls), then `GET /request/{jobId}`, then `GET /matches/{id}` again. Parsed rows get `version`, stuns, teamfight %, obs, stacks, runes, `benchmarks`.
+Unparsed coach reports show **Request parse**. That hits `POST /request/{match_id}` (OpenDota counts this as 10 rate-limit calls), polls `GET /request/{jobId}` for about 60 seconds, then re-analyzes. Valve replays usually expire after about 10 days.
 
-**Would mean:** a button when `version` is missing. Wait/poll, then re-coach and re-score. Can take minutes. Fresh pubs often need this or fantasy wards/stuns stay at 0.
+### P9. Filter ranked / drop turbo
+
+Fantasy checkboxes: Ranked only (`lobby_type` 5/6/7) and Hide turbo (`game_mode` 23). Filters apply to the SQLite cache for the current span.
+
+## Still open
 
 ### P7. Recalculate fantasy with different weights
 
@@ -49,12 +49,6 @@ Local companion window. Dota does not see it. No live lobby, no draft.
 **API:** none. Dump cache.
 
 **Would mean:** CSV of roster + match_id + hero + KDA + points + `start_time` for the active span.
-
-### P9. Filter ranked / drop turbo
-
-**API fields we already project:** `lobby_type`, `game_mode`. Constants: ranked is `lobby_type` 7 (also 5/6 legacy). Turbo is `game_mode` 23. OpenDota also accepts query `significant=1`, `lobby_type=7`, `game_mode=22` on `GET /players/{id}/matches`.
-
-**Would mean:** checkboxes on Fantasy. Filter cached rows (and optionally refetch with those query params). Turbo 20-kill games stop beating ranked 45-minute games. Highest-leverage small change.
 
 ### P10. Poll for new games
 
@@ -69,9 +63,3 @@ Local companion window. Dota does not see it. No live lobby, no draft.
 | P1 in-game overlay | Needs Overwolf or Valve GSI. Not this API. |
 | P2 auto Steam account | Reads local Steam files. OpenDota cannot tell whose PC this is. |
 | P3 opacity / click-through | Window manager. No extra match data. |
-
-## If you only pick a few
-
-**P9, P5, P6, P4.** P9 is filter math. P5 is fields we already download and throw away. P6 is the official parse endpoint. P4 is `lane_role` plus farm/ward heuristics.
-
-Send IDs, for example `approve P9 P5 P6`.

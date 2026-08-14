@@ -37,6 +37,7 @@ def _match_row(match_id: int, start_time: int, hero_id: int = 1, **overrides) ->
         "firstblood_claimed": 1,
         "stuns": 10,
         "game_mode": 22,
+        "lobby_type": 7,
     }
     row.update(overrides)
     return row
@@ -50,12 +51,23 @@ class FakeOpenDota:
         self._matches = {
             111: [
                 _match_row(7000000001, now - 2 * 86400, 1),
-                _match_row(7000000002, now - 40 * 86400, 74, kills=2, deaths=10, assists=4),
+                _match_row(
+                    7000000002,
+                    now - 40 * 86400,
+                    74,
+                    kills=2,
+                    deaths=10,
+                    assists=4,
+                    game_mode=23,
+                    lobby_type=0,
+                ),
             ],
             222: [
                 _match_row(7000000003, now - 1 * 86400, 14, kills=6, deaths=6, assists=20),
             ],
         }
+
+        self._job_queued = False
 
     def get_match(self, match_id: int) -> dict:
         assert match_id == self._match["match_id"]
@@ -106,6 +118,28 @@ class FakeOpenDota:
             rows = [row for row in rows if row["start_time"] >= cutoff]
         return rows[:limit]
 
+    def get_hero_benchmarks(self, hero_id: int) -> dict:
+        return {
+            "hero_id": hero_id,
+            "result": {
+                "gold_per_min": [
+                    {"percentile": 0.5, "value": 600},
+                    {"percentile": 0.8, "value": 750},
+                ]
+            },
+        }
+
+    def request_parse(self, match_id: int) -> dict:
+        self._job_queued = True
+        return {"job": {"jobId": "job-1"}}
+
+    def parse_job(self, job_id: str | int) -> dict | None:
+        if self._job_queued:
+            self._job_queued = False
+            self._match["version"] = 21
+            return {"state": "active"}
+        return None
+
 
 class FakeCoach:
     def analyze(self, brief: dict) -> CoachReport:
@@ -139,8 +173,8 @@ def constants() -> GameConstants:
     return GameConstants(
         heroes={1: "Anti-Mage", 74: "Invoker", 14: "Pudge"},
         items={1: "Blink Dagger", 50: "Phase Boots"},
-        game_modes={22: "All Pick"},
-        lobby_types={7: "Ranked"},
+        game_modes={22: "All Pick", 23: "Turbo"},
+        lobby_types={7: "Ranked", 0: "Normal"},
     )
 
 

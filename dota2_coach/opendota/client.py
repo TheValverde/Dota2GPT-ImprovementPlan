@@ -119,6 +119,17 @@ class OpenDotaClient:
             return []
         return [row for row in payload if isinstance(row, dict)]
 
+    def get_hero_benchmarks(self, hero_id: int) -> dict[str, Any]:
+        payload = self._get("benchmarks", params={"hero_id": str(hero_id)})
+        return payload if isinstance(payload, dict) else {}
+
+    def request_parse(self, match_id: int) -> dict[str, Any]:
+        payload = self._post(f"request/{match_id}")
+        return payload if isinstance(payload, dict) else {}
+
+    def parse_job(self, job_id: str | int) -> Any:
+        return self._get(f"request/{job_id}")
+
     def load_constants(self) -> GameConstants:
         try:
             return self.constants.load()
@@ -146,9 +157,29 @@ class OpenDotaClient:
             if path.startswith("matches/"):
                 match_id = int(path.split("/")[1])
                 raise MatchNotFoundError(match_id)
+            if path.startswith("request/"):
+                return None
             raise OpenDotaError(f"OpenDota returned 404 for {path}.")
         if response.status_code >= 400:
             raise OpenDotaError(
                 f"OpenDota returned {response.status_code} for {path}."
             )
+        return response.json()
+
+    def _post(self, path: str) -> Any:
+        query: dict[str, Any] = {}
+        if self._api_key:
+            query["api_key"] = self._api_key
+        try:
+            response = self._http.post(f"{self._base_url}/{path}", params=query)
+        except httpx.HTTPError as exc:
+            raise OpenDotaError(f"OpenDota request failed: {exc}") from exc
+        if response.status_code == 404 and path.startswith("request/"):
+            return None
+        if response.status_code >= 400:
+            raise OpenDotaError(
+                f"OpenDota returned {response.status_code} for POST {path}."
+            )
+        if not response.content:
+            return {}
         return response.json()

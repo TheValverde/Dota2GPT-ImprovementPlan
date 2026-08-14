@@ -331,6 +331,43 @@ button:disabled {
   width: 140px;
 }
 
+.filter-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.check input {
+  width: auto;
+  accent-color: var(--gold);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.parse-box {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  display: grid;
+  gap: 8px;
+}
+
 .add-player {
   flex: 1;
   min-width: 240px;

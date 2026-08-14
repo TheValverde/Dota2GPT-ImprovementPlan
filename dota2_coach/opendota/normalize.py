@@ -4,12 +4,17 @@ from typing import Any
 
 from dota2_coach.errors import PlayerNotInMatchError
 from dota2_coach.opendota.constants import GameConstants
+from dota2_coach.opendota.benchmarks import (
+    benchmarks_from_hero_curve,
+    extract_match_benchmarks,
+)
 from dota2_coach.opendota.labels import (
     format_duration,
     is_radiant_slot,
     lane_label,
     rank_label,
 )
+from dota2_coach.opendota.roles import infer_assignment
 
 def find_focus_player(players: list[dict[str, Any]], query: str) -> dict[str, Any]:
     needle = query.strip()
@@ -116,11 +121,12 @@ def _clean_player(
         "tower_damage": player.get("tower_damage"),
         "hero_healing": player.get("hero_healing"),
         "lane": lane_label(player.get("lane_role")),
+        "roaming": bool(player.get("is_roaming")) if player.get("is_roaming") is not None else None,
         "rank": rank_label(player.get("rank_tier")),
         "items": _item_slots(player, constants),
         "neutral_item": constants.item_name(player.get("item_neutral")),
-        "observer_wards": player.get("obs_placed"),
-        "sentry_wards": player.get("sen_placed"),
+        "observer_wards": player.get("observer_wards_placed") or player.get("obs_placed"),
+        "sentry_wards": player.get("sentry_wards_placed") or player.get("sen_placed"),
         "camps_stacked": player.get("camps_stacked"),
         "runes": player.get("rune_pickups"),
         "teamfight_participation": player.get("teamfight_participation"),
@@ -140,10 +146,40 @@ def build_match_brief(
     match: dict[str, Any],
     player_query: str,
     constants: GameConstants,
+    hero_benchmarks: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     players = [p for p in match.get("players") or [] if isinstance(p, dict)]
     focus = find_focus_player(players, player_query)
     radiant_win = match.get("radiant_win")
+    focus_team = is_radiant_slot(focus.get("player_slot"), focus.get("isRadiant"))
+    teammates = [
+        player
+        for player in players
+        if is_radiant_slot(player.get("player_slot"), player.get("isRadiant")) == focus_team
+    ]
+    focus_clean = _clean_player(focus, constants, radiant_win, include_purchases=True)
+    assignment = infer_assignment(focus, teammates)
+    focus_clean["assignment"] = assignment["label"]
+    focus_clean["assignment_basis"] = assignment["basis"]
+
+    match_benchmarks = extract_match_benchmarks(focus)
+    if match_benchmarks:
+        benchmarks = match_benchmarks
+        benchmark_source = "match"
+    elif hero_benchmarks:
+        benchmarks = benchmarks_from_hero_curve(
+            focus, hero_benchmarks, match.get("duration")
+        )
+        benchmark_source = "hero_curve"
+    else:
+        benchmarks = {}
+        benchmark_source = None
+    if benchmarks:
+        focus_clean["benchmarks"] = benchmarks
+        focus_clean["benchmark_source"] = benchmark_source
+
+    parsed = match.get("version") is not None
+    start_time = match.get("start_time")
     scoreboard = [
         _clean_player(player, constants, radiant_win, include_purchases=False)
         for player in players
@@ -154,12 +190,14 @@ def build_match_brief(
         "duration_seconds": match.get("duration"),
         "game_mode": constants.game_mode_name(match.get("game_mode")),
         "lobby": constants.lobby_name(match.get("lobby_type")),
+        "lobby_type": match.get("lobby_type"),
+        "game_mode_id": match.get("game_mode"),
         "radiant_win": radiant_win,
         "radiant_score": match.get("radiant_score"),
         "dire_score": match.get("dire_score"),
         "first_blood_time": format_duration(match.get("first_blood_time")),
-        "focus_player": _clean_player(
-            focus, constants, radiant_win, include_purchases=True
-        ),
+        "parsed": parsed,
+        "start_time": start_time,
+        "focus_player": focus_clean,
         "scoreboard": scoreboard,
     }
