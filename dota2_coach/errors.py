@@ -25,3 +25,9 @@ class OpenDotaError(CoachError):
 class OpenAINotConfiguredError(CoachError):
     def __init__(self) -> None:
         super().__init__("OPENAI_API_KEY is not set.")
+
+
+class TrackedPlayerNotFoundError(CoachError):
+    def __init__(self, account_id: int) -> None:
+        super().__init__(f"Account {account_id} is not on the roster.")
+        self.account_id = account_id

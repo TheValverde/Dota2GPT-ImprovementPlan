@@ -11,3 +11,5 @@ __pycache__/
 .python-version
 dist/
 *.egg-info/
+*.sqlite
+*.sqlite-journal

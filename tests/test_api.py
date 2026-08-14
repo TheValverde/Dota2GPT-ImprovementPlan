@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
 from dota2_coach.api.app import create_app
-from dota2_coach.api.routes import get_pipeline
 from dota2_coach.config import Settings
 from dota2_coach.pipeline import AnalysisPipeline
 from tests.conftest import FakeOpenDota
@@ -50,14 +49,14 @@ def test_analyze_unknown_player(client: TestClient) -> None:
 def test_index(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert "Match Coach" in response.text
+    assert "Dota Coach" in response.text
+    assert "Fantasy" in response.text
 
 
-def test_analyze_requires_openai_key(sample_match, constants) -> None:
-    settings = Settings(openai_api_key="", openai_model="gpt-test")
+def test_analyze_requires_openai_key(sample_match, constants, tmp_path) -> None:
+    settings = Settings(openai_api_key="", openai_model="gpt-test", data_dir=str(tmp_path))
     pipeline = AnalysisPipeline(settings, opendota=FakeOpenDota(sample_match, constants))
-    app = create_app()
-    app.dependency_overrides[get_pipeline] = lambda: pipeline
+    app = create_app(settings=settings, pipeline=pipeline)
     local_client = TestClient(app)
     response = local_client.post(
         "/api/analyze",

@@ -1,7 +1,7 @@
 [project]
 name = "dota2-coach"
-version = "0.2.0"
-description = "Dota 2 match analysis and improvement plans from OpenDota plus an LLM coach."
+version = "0.3.0"
+description = "Desktop Dota 2 overlay for match coaching and fantasy point tracking."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -10,6 +10,7 @@ dependencies = [
     "openai>=1.50.0",
     "pydantic-settings>=2.6.0",
     "python-dotenv>=1.0.1",
+    "pywebview>=5.0",
     "uvicorn[standard]>=0.32.0",
 ]
 

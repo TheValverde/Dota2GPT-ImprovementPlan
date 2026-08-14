@@ -7,6 +7,31 @@ import httpx
 from dota2_coach.errors import MatchNotFoundError, OpenDotaError
 from dota2_coach.opendota.constants import ConstantsClient, GameConstants
 
+MATCH_PROJECT = (
+    "kills",
+    "deaths",
+    "assists",
+    "last_hits",
+    "denies",
+    "gold_per_min",
+    "xp_per_min",
+    "hero_id",
+    "start_time",
+    "duration",
+    "player_slot",
+    "radiant_win",
+    "tower_kills",
+    "roshan_kills",
+    "teamfight_participation",
+    "obs_placed",
+    "camps_stacked",
+    "rune_pickups",
+    "firstblood_claimed",
+    "stuns",
+    "lobby_type",
+    "game_mode",
+)
+
 
 class OpenDotaClient:
     def __init__(
@@ -20,7 +45,7 @@ class OpenDotaClient:
         self._api_key = api_key or None
         self._http = http or httpx.Client(
             timeout=timeout,
-            headers={"User-Agent": "dota2-coach/0.2"},
+            headers={"User-Agent": "dota2-coach/0.3"},
         )
         self._owns_http = http is None
         self.constants = ConstantsClient(self._http, self._base_url)
@@ -62,16 +87,57 @@ class OpenDotaClient:
             return []
         return [row for row in payload[:limit] if isinstance(row, dict)]
 
+    def get_player(self, account_id: int) -> dict[str, Any]:
+        payload = self._get(f"players/{account_id}")
+        if not isinstance(payload, dict):
+            raise OpenDotaError(f"OpenDota returned no profile for {account_id}.")
+        profile = payload.get("profile") if isinstance(payload.get("profile"), dict) else {}
+        name = profile.get("personaname") or payload.get("personaname") or str(account_id)
+        return {
+            "account_id": int(profile.get("account_id") or account_id),
+            "personaname": str(name),
+            "avatarfull": profile.get("avatarfull"),
+            "rank_tier": payload.get("rank_tier"),
+        }
+
+    def player_matches(
+        self,
+        account_id: int,
+        days: int | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        params: list[tuple[str, str]] = [
+            ("limit", str(limit)),
+            ("significant", "0"),
+        ]
+        if days:
+            params.append(("date", str(days)))
+        for field in MATCH_PROJECT:
+            params.append(("project", field))
+        payload = self._get(f"players/{account_id}/matches", params=params)
+        if not isinstance(payload, list):
+            return []
+        return [row for row in payload if isinstance(row, dict)]
+
     def load_constants(self) -> GameConstants:
         try:
             return self.constants.load()
         except httpx.HTTPError:
             return GameConstants()
 
-    def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        query = dict(params or {})
-        if self._api_key:
-            query["api_key"] = self._api_key
+    def _get(
+        self,
+        path: str,
+        params: dict[str, Any] | list[tuple[str, str]] | None = None,
+    ) -> Any:
+        if isinstance(params, list):
+            query: dict[str, Any] | list[tuple[str, str]] = list(params)
+            if self._api_key:
+                query.append(("api_key", self._api_key))
+        else:
+            query = dict(params or {})
+            if self._api_key:
+                query["api_key"] = self._api_key
         try:
             response = self._http.get(f"{self._base_url}/{path}", params=query)
         except httpx.HTTPError as exc:

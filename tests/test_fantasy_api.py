@@ -1,0 +1,36 @@
+from fastapi.testclient import TestClient
+
+
+def test_fantasy_roster_flow(client: TestClient) -> None:
+    added = client.post(
+        "/api/fantasy/roster",
+        json={"account_id": 111, "amount": 60, "unit": "days"},
+    )
+    assert added.status_code == 200
+    assert added.json()["personaname"] == "TestCarry"
+
+    client.post("/api/fantasy/roster", json={"account_id": 222, "amount": 60, "unit": "days"})
+    roster = client.get("/api/fantasy/roster", params={"amount": 60, "unit": "days"})
+    assert roster.status_code == 200
+    assert len(roster.json()["players"]) == 2
+
+    week = client.get("/api/fantasy/players/111", params={"amount": 7, "unit": "days"})
+    assert week.json()["match_count"] == 1
+
+    deleted = client.delete("/api/fantasy/roster/111")
+    assert deleted.status_code == 200
+    leftover = client.get("/api/fantasy/roster", params={"amount": 60, "unit": "days"})
+    assert leftover.json()["players"][0]["account_id"] == 222
+
+
+def test_fantasy_refresh_and_bad_span(client: TestClient) -> None:
+    client.post("/api/fantasy/roster", json={"account_id": 111, "amount": 7, "unit": "days"})
+    refreshed = client.post(
+        "/api/fantasy/refresh",
+        json={"amount": 20, "unit": "matches"},
+    )
+    assert refreshed.status_code == 200
+    assert refreshed.json()["span"]["unit"] == "matches"
+
+    bad = client.get("/api/fantasy/roster", params={"amount": 7, "unit": "years"})
+    assert bad.status_code == 400

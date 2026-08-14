@@ -8,7 +8,6 @@ const statusEl = document.getElementById("status");
 const submitBtn = document.getElementById("submit");
 const output = document.getElementById("output");
 
-let searchTimer = null;
 let selectedAccountId = null;
 
 function setStatus(message, isError = false) {
@@ -16,66 +15,15 @@ function setStatus(message, isError = false) {
   statusEl.classList.toggle("error", isError);
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-async function fetchJson(url, options) {
-  const response = await fetch(url, options);
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.detail || `Request failed (${response.status})`);
-  }
-  return payload;
-}
+bindPlayerSearch(playerInput, playerResults, async (row) => {
+  playerInput.value = row.personaname;
+  selectedAccountId = row.account_id;
+  await loadRecentMatches(row.account_id);
+});
 
 playerInput.addEventListener("input", () => {
   selectedAccountId = null;
-  const query = playerInput.value.trim();
-  window.clearTimeout(searchTimer);
-  if (query.length < 2 || /^\d+$/.test(query)) {
-    playerResults.hidden = true;
-    playerResults.innerHTML = "";
-    return;
-  }
-  searchTimer = window.setTimeout(async () => {
-    try {
-      const results = await fetchJson(`/api/players/search?q=${encodeURIComponent(query)}`);
-      renderPlayerResults(results);
-    } catch (error) {
-      playerResults.hidden = true;
-    }
-  }, 250);
 });
-
-function renderPlayerResults(results) {
-  playerResults.innerHTML = "";
-  if (!results.length) {
-    playerResults.hidden = true;
-    return;
-  }
-  for (const row of results) {
-    const item = document.createElement("li");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = `${row.personaname} (${row.account_id})`;
-    button.addEventListener("click", () => selectPlayer(row));
-    item.append(button);
-    playerResults.append(item);
-  }
-  playerResults.hidden = false;
-}
-
-async function selectPlayer(row) {
-  playerInput.value = row.personaname;
-  selectedAccountId = row.account_id;
-  playerResults.hidden = true;
-  await loadRecentMatches(row.account_id);
-}
 
 async function loadRecentMatches(accountId) {
   recent.hidden = true;

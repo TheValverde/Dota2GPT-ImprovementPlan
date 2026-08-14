@@ -4,57 +4,50 @@
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/)
-- An OpenAI API key
-- Optional: an [OpenDota API key](https://www.opendota.com/api-keys) if you hit the public rate limit
+- A desktop WebView (Windows Edge WebView2, macOS WebKit, Linux WebKitGTK or Qt)
+- An OpenAI API key for the Coach tab
+- Optional: an [OpenDota API key](https://www.opendota.com/api-keys)
 
-## Local install
+## Overlay
 
 ```bash
 cp .env.example .env
+uv sync --group dev
+uv run dota2-coach
 ```
 
-Set at least `OPENAI_API_KEY`. Optional knobs:
+`uv run dota2-coach desktop` is the same command.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Chat model used for structured coaching |
+| `OPENAI_API_KEY` | empty | Coach tab |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Chat model |
 | `OPENDOTA_API_KEY` | empty | Higher OpenDota rate limits |
-| `HOST` | `0.0.0.0` | Bind address |
+| `DOTA2_COACH_DATA` | OS app-data dir | SQLite roster cache |
+| `HOST` | `0.0.0.0` for `serve` | Bind address |
 | `PORT` | `8765` | HTTP port |
 
-Then:
+Roster data lives in `%APPDATA%\Dota2Coach` on Windows or `~/.local/share/dota2-coach` on Linux/macOS.
+
+## HTTP only
 
 ```bash
-uv sync --group dev
 uv run dota2-coach serve
-```
-
-The app is at `http://127.0.0.1:8765`. Tests:
-
-```bash
 uv run pytest
 ```
 
 ## Docker
 
-Port **8765** is the documented listen port. This environment had no `ufw` and no running containers, so nothing else was occupying it. If you run `ufw` on the host:
-
-```bash
-sudo ufw allow 8765/tcp
-sudo ufw reload
-```
+Docker serves the HTTP UI, not the native overlay. Port **8765**.
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-`docker compose` reads `.env` for `OPENAI_API_KEY` and related settings.
-
-## CLI
+If the host uses `ufw`:
 
 ```bash
-uv run dota2-coach analyze --player 111 --match 7000000001
+sudo ufw allow 8765/tcp
+sudo ufw reload
 ```
-
-`--player` accepts a persona name or a 32-bit OpenDota / Steam account ID.

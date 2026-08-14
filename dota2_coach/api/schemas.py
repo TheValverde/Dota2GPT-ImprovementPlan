@@ -30,3 +30,15 @@ class RecentMatch(BaseModel):
     duration: int | None = None
     game_mode: str | None = None
     start_time: int | None = None
+
+
+class AddTrackedPlayerRequest(BaseModel):
+    account_id: int = Field(gt=0)
+    amount: int = Field(default=7, ge=1, le=365)
+    unit: str = Field(default="days")
+
+
+class RefreshFantasyRequest(BaseModel):
+    account_id: int | None = None
+    amount: int = Field(default=7, ge=1, le=365)
+    unit: str = Field(default="days")
