@@ -46,16 +46,19 @@
               id="match-id"
               name="match_id"
               inputmode="numeric"
-              placeholder="From OpenDota or the scoreboard"
-              required
+              placeholder="Leave blank to use the latest parsed game"
             />
           </div>
           <div class="actions">
             <button type="submit" id="submit">Analyze match</button>
+            <button type="button" id="coach-latest" class="ghost">
+              Coach latest parsed
+            </button>
             <p id="status" class="status" role="status"></p>
           </div>
           <div id="recent" class="recent" hidden>
             <h2>Recent matches</h2>
+            <p class="muted">Parsed games have replay details. Click one or use Coach latest parsed.</p>
             <div id="recent-list" class="recent-list"></div>
           </div>
         </form>

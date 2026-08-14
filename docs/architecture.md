@@ -32,6 +32,7 @@ flowchart LR
 | `dota2_coach/fantasy/store.py` | SQLite roster and match cache |
 | `dota2_coach/fantasy/tracker.py` | Add/remove players, refresh, summaries |
 | `dota2_coach/opendota/` | Match, search, profile, projected match history, parse jobs |
+| `dota2_coach/opendota/parsed.py` | Latest parsed match from `version` on history rows |
 | `dota2_coach/opendota/roles.py` | Lane/farm assignment from OpenDota fields |
 | `dota2_coach/opendota/benchmarks.py` | Match percentiles and hero-curve interpolation |
 | `dota2_coach/opendota/filters.py` | Ranked-only and hide-turbo fantasy filters |

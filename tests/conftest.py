@@ -38,6 +38,7 @@ def _match_row(match_id: int, start_time: int, hero_id: int = 1, **overrides) ->
         "stuns": 10,
         "game_mode": 22,
         "lobby_type": 7,
+        "version": None,
     }
     row.update(overrides)
     return row
@@ -50,7 +51,7 @@ class FakeOpenDota:
         now = int(time())
         self._matches = {
             111: [
-                _match_row(7000000001, now - 2 * 86400, 1),
+                _match_row(7000000001, now - 2 * 86400, 1, version=21),
                 _match_row(
                     7000000002,
                     now - 40 * 86400,
@@ -64,6 +65,9 @@ class FakeOpenDota:
             ],
             222: [
                 _match_row(7000000003, now - 1 * 86400, 14, kills=6, deaths=6, assists=20),
+            ],
+            444: [
+                _match_row(7000000001, now - 3 * 86400, 1, version=21),
             ],
         }
 
@@ -87,7 +91,36 @@ class FakeOpenDota:
         ]
 
     def recent_matches(self, account_id: int) -> list[dict]:
+        if account_id in {333, 444}:
+            return [
+                {
+                    "match_id": 7000000004,
+                    "hero_id": 14,
+                    "kills": 1,
+                    "deaths": 8,
+                    "assists": 3,
+                    "player_slot": 0,
+                    "radiant_win": False,
+                    "duration": 1800,
+                    "game_mode": 22,
+                    "start_time": 3,
+                    "version": None,
+                }
+            ]
         return [
+            {
+                "match_id": 7000000002,
+                "hero_id": 74,
+                "kills": 2,
+                "deaths": 10,
+                "assists": 4,
+                "player_slot": 0,
+                "radiant_win": False,
+                "duration": 1800,
+                "game_mode": 23,
+                "start_time": 2,
+                "version": None,
+            },
             {
                 "match_id": 7000000001,
                 "hero_id": 1,
@@ -99,7 +132,8 @@ class FakeOpenDota:
                 "duration": 2460,
                 "game_mode": 22,
                 "start_time": 1,
-            }
+                "version": 21,
+            },
         ]
 
     def get_player(self, account_id: int) -> dict:

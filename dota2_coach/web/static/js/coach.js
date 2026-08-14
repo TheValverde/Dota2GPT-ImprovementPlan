@@ -6,13 +6,19 @@ const recent = document.getElementById("recent");
 const recentList = document.getElementById("recent-list");
 const statusEl = document.getElementById("status");
 const submitBtn = document.getElementById("submit");
+const latestBtn = document.getElementById("coach-latest");
 const output = document.getElementById("output");
 
 let selectedAccountId = null;
+let accountTimer = null;
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
   statusEl.classList.toggle("error", isError);
+}
+
+function currentPlayer() {
+  return selectedAccountId ? String(selectedAccountId) : playerInput.value.trim();
 }
 
 bindPlayerSearch(playerInput, playerResults, async (row) => {
@@ -22,6 +28,13 @@ bindPlayerSearch(playerInput, playerResults, async (row) => {
 });
 
 playerInput.addEventListener("input", () => {
+  const query = playerInput.value.trim();
+  window.clearTimeout(accountTimer);
+  if (/^\d+$/.test(query) && query.length >= 5) {
+    selectedAccountId = Number(query);
+    accountTimer = window.setTimeout(() => loadRecentMatches(selectedAccountId), 250);
+    return;
+  }
   selectedAccountId = null;
 });
 
@@ -36,9 +49,10 @@ async function loadRecentMatches(accountId) {
     for (const match of matches) {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `match-chip ${match.won ? "win" : match.won === false ? "loss" : ""}`;
+      button.className = `match-chip ${match.won ? "win" : match.won === false ? "loss" : ""} ${match.parsed ? "parsed" : "unparsed"}`;
       const result = match.won ? "Win" : match.won === false ? "Loss" : "Match";
-      button.innerHTML = `<strong>${escapeHtml(match.hero || "Unknown hero")}</strong><br>${result} ${match.kills}/${match.deaths}/${match.assists}<br>#${match.match_id}`;
+      const parseTag = match.parsed ? "Parsed" : "Unparsed";
+      button.innerHTML = `<strong>${escapeHtml(match.hero || "Unknown hero")}</strong><br>${result} ${match.kills}/${match.deaths}/${match.assists}<br><span class="parse-tag">${parseTag}</span> #${match.match_id}`;
       button.addEventListener("click", () => {
         matchInput.value = match.match_id;
       });
@@ -50,29 +64,55 @@ async function loadRecentMatches(accountId) {
   }
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
+async function analyzeMatch({ useLatest = false } = {}) {
   output.hidden = true;
   submitBtn.disabled = true;
-  setStatus("Pulling the match and writing a plan...");
-  const player = selectedAccountId ? String(selectedAccountId) : playerInput.value.trim();
+  if (latestBtn) {
+    latestBtn.disabled = true;
+  }
+  const player = currentPlayer();
+  const matchId = Number(matchInput.value);
+  const body = { player };
+  if (!useLatest && Number.isFinite(matchId) && matchId > 0) {
+    body.match_id = matchId;
+  }
+  setStatus(
+    useLatest || !body.match_id
+      ? "Finding a parsed match and writing a plan..."
+      : "Pulling the match and writing a plan..."
+  );
   try {
     const payload = await fetchJson("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        player,
-        match_id: Number(matchInput.value),
-      }),
+      body: JSON.stringify(body),
     });
+    if (payload.brief && payload.brief.match_id) {
+      matchInput.value = payload.brief.match_id;
+    }
     renderReport(payload);
     setStatus("Done.");
   } catch (error) {
     setStatus(error.message, true);
   } finally {
     submitBtn.disabled = false;
+    if (latestBtn) {
+      latestBtn.disabled = false;
+    }
   }
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await analyzeMatch({ useLatest: false });
 });
+
+if (latestBtn) {
+  latestBtn.addEventListener("click", async () => {
+    matchInput.value = "";
+    await analyzeMatch({ useLatest: true });
+  });
+}
 
 function listHtml(items) {
   if (!items || !items.length) {

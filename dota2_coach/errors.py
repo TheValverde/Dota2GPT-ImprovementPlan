@@ -31,3 +31,18 @@ class TrackedPlayerNotFoundError(CoachError):
     def __init__(self, account_id: int) -> None:
         super().__init__(f"Account {account_id} is not on the roster.")
         self.account_id = account_id
+
+
+class AccountIdRequiredError(CoachError):
+    def __init__(self) -> None:
+        super().__init__(
+            "Use an OpenDota account ID to find the latest parsed match."
+        )
+
+
+class ParsedMatchNotFoundError(CoachError):
+    def __init__(self, account_id: int) -> None:
+        super().__init__(
+            f"No parsed match found for account {account_id} in recent games."
+        )
+        self.account_id = account_id

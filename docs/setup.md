@@ -34,7 +34,10 @@ Roster data lives in `%APPDATA%\Dota2Coach` on Windows or `~/.local/share/dota2-
 ```bash
 uv run dota2-coach serve
 uv run pytest
+uv run dota2-coach analyze --player 286841060
 ```
+
+`analyze` without `--match` coaches the latest parsed game for that account ID. Set `OPENAI_API_KEY` first.
 
 ## Docker
 

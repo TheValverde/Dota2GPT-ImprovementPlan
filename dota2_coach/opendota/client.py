@@ -30,6 +30,7 @@ MATCH_PROJECT = (
     "stuns",
     "lobby_type",
     "game_mode",
+    "version",
 )
 
 
@@ -81,7 +82,7 @@ class OpenDotaClient:
             )
         return results
 
-    def recent_matches(self, account_id: int, limit: int = 10) -> list[dict[str, Any]]:
+    def recent_matches(self, account_id: int, limit: int = 20) -> list[dict[str, Any]]:
         payload = self._get(f"players/{account_id}/recentMatches")
         if not isinstance(payload, list):
             return []
