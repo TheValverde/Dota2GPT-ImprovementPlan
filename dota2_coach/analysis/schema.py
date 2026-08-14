@@ -13,9 +13,12 @@ class CoachReport(BaseModel):
         description=(
             "Two to four paragraphs. Start from opening_sequence when present. "
             "If a pre-lane observer, courier snipes, and lane-opponent kills sit "
-            "in that order, write them as one causal chain, then continue through "
-            "towers, Roshan, gold swing, and who showed in fights. Place the focus "
-            "player inside those moments. Do not summarize only their KDA."
+            "in that order, write them as one causal chain. If the focus player "
+            "gets early lane kills, write what those deaths bought (gold, XP, "
+            "who could leave) and what happened to that opponent for the rest "
+            "of the game, then continue through towers, Roshan, gold swing, and "
+            "who showed in fights. Place the focus player inside those moments. "
+            "Do not summarize only their KDA."
         )
     )
     grade: str = Field(description="Letter grade from S, A, B, C, D, or F.")

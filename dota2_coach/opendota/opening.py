@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from dota2_coach.opendota.abilities import npc_hero_label
+from dota2_coach.opendota.abilities import kill_key_matches, npc_hero_label
 from dota2_coach.opendota.labels import format_duration
 
 OPENING_UNTIL_SECONDS = 8 * 60
@@ -16,9 +16,23 @@ OPENING_NOTE = (
     "unrelated facts."
 )
 
+MAP_OPENING_NOTE = (
+    "Other lanes in the first eight minutes. If a teammate is also winning "
+    "their lane at the same time, the lane opponent cannot get help and cannot "
+    "rotate. Later rotations by the focus player are a consequence of that "
+    "map, not a separate story."
+)
+
 
 def _hero_label(player: dict[str, Any], constants) -> str:
     return constants.hero_name(player.get("hero_id")) or "Unknown"
+
+
+def _victim_label(key: Any, players: list[dict[str, Any]], constants) -> str:
+    for player in players:
+        if kill_key_matches(key, player, constants):
+            return _hero_label(player, constants)
+    return npc_hero_label(key) or "unknown"
 
 
 def _player_by_slot(players: list[dict[str, Any]], slot: Any) -> dict[str, Any] | None:
@@ -92,10 +106,11 @@ def build_opening_sequence(
     constants,
     focus: dict[str, Any],
     until_seconds: int = OPENING_UNTIL_SECONDS,
+    lane_only: bool = True,
 ) -> list[dict[str, Any]]:
     players = [p for p in match.get("players") or [] if isinstance(p, dict)]
     focus_slot = focus.get("player_slot")
-    focus_lane = focus.get("lane")
+    focus_lane = focus.get("lane") if lane_only else None
     lane_heroes = _lane_hero_names(players, constants, focus_lane)
     events: list[tuple[int, dict[str, Any]]] = []
 
@@ -173,7 +188,7 @@ def build_opening_sequence(
             time = _seconds(entry.get("time"))
             if time is None or not _in_window(time, until_seconds):
                 continue
-            victim = npc_hero_label(entry.get("key")) or "unknown"
+            victim = _victim_label(entry.get("key"), players, constants)
             victim_in_lane = victim in lane_heroes or victim.lower() in lane_heroes
             if focus_lane is not None and not killer_in_lane and not victim_in_lane:
                 continue
@@ -192,3 +207,30 @@ def build_opening_sequence(
 
     events.sort(key=lambda item: item[0])
     return [row for _, row in events]
+
+
+def _event_key(row: dict[str, Any]) -> tuple:
+    return (
+        row.get("time"),
+        row.get("event"),
+        row.get("by"),
+        row.get("victim"),
+        row.get("courier_team"),
+        row.get("building"),
+    )
+
+
+def build_map_opening(
+    match: dict[str, Any],
+    constants,
+    focus: dict[str, Any],
+    until_seconds: int = OPENING_UNTIL_SECONDS,
+) -> list[dict[str, Any]]:
+    lane = build_opening_sequence(
+        match, constants, focus, until_seconds=until_seconds, lane_only=True
+    )
+    full = build_opening_sequence(
+        match, constants, focus, until_seconds=until_seconds, lane_only=False
+    )
+    seen = {_event_key(row) for row in lane}
+    return [row for row in full if _event_key(row) not in seen]

@@ -17,6 +17,8 @@ If first blood is on a hero in laned_against, that is a lane kill, not a roam.
 
 Start from opening_sequence when it is present. Walk those rows in clock order. If the focus player's observer sits before their courier_kill rows, and those sit before hero_kill rows on laned_against heroes, that is one play. The ward is how the courier was seen. The dead couriers are why the lane then dies: no regen, delayed items. Then the heroes die. Do not mention the observer in one sentence, the courier snipes in another section, and the lane-opponent kills as a separate recap. opening_note repeats this rule. Courier Lost rows in macro include `by` and `courier_team`.
 
+Early kills on the lane opponent are a swing, not a score. Use lane_swing. After those deaths, say the gold and XP lead, what the opponent delayed, and who could leave first. If last hits equalize later, they farmed an empty wave. If they take a T1 while the focus player is fighting elsewhere, that tower is the tax for leaving, not the opponent winning the lane. Follow that opponent for the rest of the game: first kill time and items say whether they ever became a hero. Use map_opening for the other lanes at the same time. If a teammate is also winning, the opponent cannot rotate, and the focus player's later rotations are a consequence of that map.
+
 Write the report as a game story, not a KDA sheet. Walk towers, Roshan, gold swings, who showed in teamfights, and what teammates and enemies were doing. Place the focus player inside those moments. The macro block (objectives, teamfights, gold_advantage) is the spine of the recap.
 
 Spell rules:
@@ -41,7 +43,10 @@ def user_prompt(match_brief: dict) -> str:
         f"Analyze this match for the focus player as a {assignment}.{vs_line}\n"
         "Start match_read and game_timeline from opening_sequence when it is present. "
         "If observer then courier_kill then lane-opponent hero_kill sit in that order, "
-        "write them as one causal chain before you leave the lane. Then walk the rest "
+        "write them as one causal chain before you leave the lane. If lane_swing has "
+        "early kills on the opponent, write the impact: gold/XP lead, delayed items, "
+        "who could rotate, and whether that opponent ever became a hero. Use "
+        "map_opening so other lanes sit in that same window. Then walk the rest "
         "of the game from the macro block. Coach the player inside those moments, "
         "including teammates and enemies.\n"
         f"Match brief:\n{match_brief}"

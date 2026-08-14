@@ -40,6 +40,7 @@ def _id_name_map(payload: Any) -> dict[int, str]:
 @dataclass
 class GameConstants:
     heroes: dict[int, str] = field(default_factory=dict)
+    hero_npcs: dict[int, str] = field(default_factory=dict)
     items: dict[int, str] = field(default_factory=dict)
     game_modes: dict[int, str] = field(default_factory=dict)
     lobby_types: dict[int, str] = field(default_factory=dict)
@@ -48,6 +49,11 @@ class GameConstants:
         if hero_id is None:
             return None
         return self.heroes.get(hero_id, f"Hero {hero_id}")
+
+    def hero_npc(self, hero_id: int | None) -> str | None:
+        if hero_id is None:
+            return None
+        return self.hero_npcs.get(hero_id)
 
     def item_name(self, item_id: int | None) -> str | None:
         if not item_id:
@@ -65,6 +71,25 @@ class GameConstants:
         return self.lobby_types.get(lobby_id, f"Lobby {lobby_id}")
 
 
+def _npc_name_map(payload: Any) -> dict[int, str]:
+    mapping: dict[int, str] = {}
+    if not isinstance(payload, dict):
+        return mapping
+    for key, entry in payload.items():
+        if not isinstance(entry, dict):
+            continue
+        npc = entry.get("name")
+        if not isinstance(npc, str) or not npc.startswith("npc_dota_hero_"):
+            continue
+        hero_id = entry.get("id")
+        if hero_id is None and str(key).isdigit():
+            hero_id = int(key)
+        if hero_id is None:
+            continue
+        mapping[int(hero_id)] = npc
+    return mapping
+
+
 def constants_from_payloads(
     heroes: Any,
     items: Any,
@@ -73,6 +98,7 @@ def constants_from_payloads(
 ) -> GameConstants:
     return GameConstants(
         heroes=_id_name_map(heroes),
+        hero_npcs=_npc_name_map(heroes),
         items=_id_name_map(items),
         game_modes=_id_name_map(game_modes),
         lobby_types=_id_name_map(lobby_types),

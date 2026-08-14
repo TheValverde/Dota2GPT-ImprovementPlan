@@ -21,7 +21,13 @@ from dota2_coach.opendota.abilities import (
 )
 from dota2_coach.opendota.lanes import describe_lane_matchup
 from dota2_coach.opendota.roles import infer_assignment
-from dota2_coach.opendota.opening import OPENING_NOTE, build_opening_sequence
+from dota2_coach.opendota.opening import (
+    MAP_OPENING_NOTE,
+    OPENING_NOTE,
+    build_map_opening,
+    build_opening_sequence,
+)
+from dota2_coach.opendota.lane_swing import build_lane_swing
 from dota2_coach.opendota.timeline import build_macro
 
 def find_focus_player(players: list[dict[str, Any]], query: str) -> dict[str, Any]:
@@ -266,4 +272,11 @@ def build_match_brief(
     if opening:
         brief["opening_sequence"] = opening
         brief["opening_note"] = OPENING_NOTE
+    map_opening = build_map_opening(match, constants, focus)
+    if map_opening:
+        brief["map_opening"] = map_opening
+        brief["map_opening_note"] = MAP_OPENING_NOTE
+    swing = build_lane_swing(match, constants, focus)
+    if swing:
+        brief["lane_swing"] = swing
     return brief

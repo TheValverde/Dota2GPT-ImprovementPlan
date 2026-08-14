@@ -1,6 +1,6 @@
 from dota2_coach.opendota.constants import GameConstants
 from dota2_coach.opendota.normalize import build_match_brief
-from dota2_coach.opendota.opening import OPENING_NOTE, build_opening_sequence
+from dota2_coach.opendota.opening import OPENING_NOTE, build_map_opening, build_opening_sequence
 
 
 def _opening_match() -> tuple[dict, dict, GameConstants]:
@@ -132,6 +132,15 @@ def test_opening_sequence_is_ward_then_couriers_then_lane_kills() -> None:
     assert all(row.get("victim") != "Silencer" for row in rows)
     assert all("tower1 mid" not in row.get("building", "") for row in rows)
     assert all(row["event"] != "courier_kill" or row["time"] != "10:10" for row in rows)
+
+
+def test_map_opening_keeps_other_lanes() -> None:
+    match, bane, constants = _opening_match()
+    extra = build_map_opening(match, constants, bane)
+    victims = [row.get("victim") for row in extra if row["event"] == "hero_kill"]
+    assert "Silencer" in victims
+    assert "Drow Ranger" not in victims
+    assert any("tower1 mid" in row.get("building", "") for row in extra)
 
 
 def test_brief_exposes_opening_sequence_and_note(

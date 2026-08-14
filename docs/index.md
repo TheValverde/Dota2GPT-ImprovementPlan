@@ -10,6 +10,6 @@ Overlay companion for post-game coaching and a fantasy point board.
 
 ## Panels
 
-**Coach.** Look up a player, pick a match, or paste an account ID and use **Coach latest parsed**. The brief includes lane opponents, an opening clock (pre-lane wards, courier snipes, then hero kills), towers, Roshan, fights, gold, and who spells actually hit. Unparsed matches can request a parse, then re-analyze.
+**Coach.** Look up a player, pick a match, or paste an account ID and use **Coach latest parsed**. The brief includes lane opponents, an opening clock (pre-lane wards, courier snipes, then hero kills), the other lanes in that window, gold/XP gap vs the lane opponent after early kills, towers, Roshan, fights, gold, and who spells actually hit. Unparsed matches can request a parse, then re-analyze.
 
 **Fantasy.** Track any number of accounts. Totals, averages, and per-match points over a span of days, weeks, months, or last N matches. Optional ranked-only and hide-turbo filters. Selecting a player also scores everyone in their ranked lobbies (duo plus the rest of the field) and requests parses for unparsed replays.

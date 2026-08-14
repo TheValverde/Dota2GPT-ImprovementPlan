@@ -11,6 +11,22 @@ def npc_hero_label(key: Any) -> str | None:
     return key.replace("_", " ")
 
 
+def kill_key_matches(key: Any, player: dict, constants) -> bool:
+    if not isinstance(key, str) or not key:
+        return False
+    hero_id = player.get("hero_id")
+    npc = constants.hero_npc(hero_id) if hasattr(constants, "hero_npc") else None
+    if npc and key == npc:
+        return True
+    label = npc_hero_label(key)
+    hero = constants.hero_name(hero_id) if hero_id is not None else None
+    if label and hero and label.lower() == hero.lower():
+        return True
+    if npc and label and npc_hero_label(npc) and label.lower() == npc_hero_label(npc).lower():
+        return True
+    return False
+
+
 def named_counts(raw: Any) -> dict[str, int]:
     if not isinstance(raw, dict):
         return {}
