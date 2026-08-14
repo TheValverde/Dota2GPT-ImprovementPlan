@@ -9,6 +9,31 @@ def _hero_label(player: dict[str, Any], constants) -> str:
     return constants.hero_name(player.get("hero_id")) or "Unknown"
 
 
+def _player_by_slot(players: list[dict[str, Any]], slot: Any) -> dict[str, Any] | None:
+    try:
+        slot_id = int(slot)
+    except (TypeError, ValueError):
+        return None
+    for player in players:
+        if player.get("player_slot") == slot_id:
+            return player
+    if 0 <= slot_id < len(players):
+        return players[slot_id]
+    return None
+
+
+def _team_name(team: Any) -> str | None:
+    try:
+        team_id = int(team)
+    except (TypeError, ValueError):
+        return None
+    if team_id == 2:
+        return "Radiant"
+    if team_id == 3:
+        return "Dire"
+    return None
+
+
 def compact_gold_advantage(match: dict[str, Any], step: int = 5) -> list[dict[str, Any]]:
     series = match.get("radiant_gold_adv") or []
     if not isinstance(series, list):
@@ -45,6 +70,7 @@ def compact_objectives(match: dict[str, Any], constants) -> list[dict[str, Any]]
             "CHAT_MESSAGE_AEGIS_STOLEN",
             "CHAT_MESSAGE_MINIBOSS_KILL",
             "CHAT_MESSAGE_FIRSTBLOOD",
+            "CHAT_MESSAGE_COURIER_LOST",
         }:
             continue
         row: dict[str, Any] = {
@@ -54,9 +80,19 @@ def compact_objectives(match: dict[str, Any], constants) -> list[dict[str, Any]]
         key = event.get("key")
         if isinstance(key, str) and key.startswith("npc_dota_"):
             row["building"] = key.replace("npc_dota_", "").replace("_", " ")
-        slot = event.get("slot")
-        if isinstance(slot, int) and 0 <= slot < len(players):
-            row["by"] = _hero_label(players[slot], constants)
+        courier_team = _team_name(event.get("team"))
+        if kind == "CHAT_MESSAGE_COURIER_LOST" and courier_team:
+            row["courier_team"] = courier_team
+        actor = None
+        killer = event.get("killer")
+        if killer is not None:
+            actor = _player_by_slot(players, killer)
+        if actor is None:
+            slot = event.get("slot")
+            if isinstance(slot, int) and 0 <= slot < len(players):
+                actor = players[slot]
+        if actor is not None:
+            row["by"] = _hero_label(actor, constants)
         rows.append(row)
     return rows
 

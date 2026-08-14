@@ -71,6 +71,28 @@ def _available_names(players: list[dict[str, Any]]) -> list[str]:
     return names
 
 
+def _ward_times(player: dict[str, Any], limit: int = 12) -> list[dict[str, Any]]:
+    events: list[tuple[int, str]] = []
+    for kind, log in (
+        ("observer", player.get("obs_log")),
+        ("sentry", player.get("sen_log")),
+    ):
+        if not isinstance(log, list):
+            continue
+        for entry in log:
+            if not isinstance(entry, dict) or entry.get("time") is None:
+                continue
+            try:
+                events.append((int(entry["time"]), kind))
+            except (TypeError, ValueError):
+                continue
+    events.sort(key=lambda item: item[0])
+    return [
+        {"type": kind, "time": format_duration(seconds)}
+        for seconds, kind in events[:limit]
+    ]
+
+
 def _item_slots(player: dict[str, Any], constants: GameConstants) -> list[str]:
     names: list[str] = []
     for slot in ("item_0", "item_1", "item_2", "item_3", "item_4", "item_5"):
@@ -162,6 +184,16 @@ def _clean_player(
                 for entry in kills[:16]
                 if isinstance(entry, dict)
             ]
+        ward_log = _ward_times(player)
+        if ward_log:
+            cleaned["ward_log"] = ward_log
+        killed = player.get("killed") if isinstance(player.get("killed"), dict) else {}
+        try:
+            couriers = int(killed.get("npc_dota_courier") or 0)
+        except (TypeError, ValueError):
+            couriers = 0
+        if couriers:
+            cleaned["courier_kills"] = couriers
     return {key: value for key, value in cleaned.items() if value not in (None, [], {})}
 
 

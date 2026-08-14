@@ -107,6 +107,9 @@ def test_build_match_brief_includes_spell_targets_and_macro(
         "bane_enfeeble": {"npc_dota_hero_crystal_maiden": 1},
     }
     player["ability_uses"] = {"bane_fiends_grip": 2, "bane_enfeeble": 1}
+    player["obs_log"] = [{"time": -39}]
+    player["sen_log"] = [{"time": -11}]
+    player["killed"] = {"npc_dota_courier": 2}
     match = dict(sample_match)
     match["players"] = [player, *sample_match["players"][1:]]
     match["objectives"] = [
@@ -115,10 +118,18 @@ def test_build_match_brief_includes_spell_targets_and_macro(
             "type": "building_kill",
             "key": "npc_dota_goodguys_tower1_bot",
             "slot": 0,
-        }
+        },
+        {
+            "time": 114,
+            "type": "CHAT_MESSAGE_COURIER_LOST",
+            "team": 2,
+            "killer": 0,
+        },
     ]
     match["radiant_gold_adv"] = [0, -500, -2000]
     brief = build_match_brief(match, "TestCarry", constants)
     assert brief["focus_player"]["ability_targets"]["bane_fiends_grip"]["Drow Ranger"] == 2
-    assert brief["macro"]["objectives"][0]["by"] == "Anti-Mage"
+    assert brief["focus_player"]["courier_kills"] == 2
+    assert brief["focus_player"]["ward_log"][0] == {"type": "observer", "time": "-0:39"}
+    assert any(row["event"] == "Courier Lost" for row in brief["macro"]["objectives"])
     assert brief["macro"]["winner"] == "Radiant"

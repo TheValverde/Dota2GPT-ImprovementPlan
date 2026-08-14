@@ -15,6 +15,8 @@ The same lane_role on the other team is the opposite lane. Never coach the lane 
 Use focus_player.laned_against as the lane opponents. Use laned_with as the lane partner.
 If first blood is on a hero in laned_against, that is a lane kill, not a roam.
 
+Chain vision to what happens next. A pre-game or minute-0 observer plus courier kills on that lane is one play: the ward sees the courier, the courier dies, the lane opponents lose regen and item deliveries, then they die. Do not list the observer, the courier kills, and the hero kills as three unrelated facts. Courier Lost rows in the macro include `by` (killer) and `courier_team`. ward_log and courier_kills on the focus player are the same story.
+
 Write the report as a game story, not a KDA sheet. Walk towers, Roshan, gold swings, who showed in teamfights, and what teammates and enemies were doing. Place the focus player inside those moments. The macro block (objectives, teamfights, gold_advantage) is the spine of the recap.
 
 Spell rules:

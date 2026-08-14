@@ -13,6 +13,12 @@ def test_macro_includes_towers_fights_and_gold() -> None:
         "players": [drow, {"hero_id": 1, "player_slot": 1}, {"hero_id": 1, "player_slot": 2}, {"hero_id": 1, "player_slot": 3}, {"hero_id": 1, "player_slot": 4}, bane, dawn],
         "objectives": [
             {"time": 393, "type": "building_kill", "key": "npc_dota_goodguys_tower1_bot", "slot": 6},
+            {
+                "time": 114,
+                "type": "CHAT_MESSAGE_COURIER_LOST",
+                "team": 2,
+                "killer": 128,
+            },
             {"time": 1438, "type": "CHAT_MESSAGE_ROSHAN_KILL"},
         ],
         "teamfights": [
@@ -35,6 +41,9 @@ def test_macro_includes_towers_fights_and_gold() -> None:
     assert macro["winner"] == "Dire"
     assert macro["objectives"][0]["by"] == "Dawnbreaker"
     assert "tower1 bot" in macro["objectives"][0]["building"]
+    courier = next(row for row in macro["objectives"] if row["event"] == "Courier Lost")
+    assert courier["by"] == "Bane"
+    assert courier["courier_team"] == "Radiant"
     fights = compact_teamfights(match, constants, bane)
     assert fights[0]["focus_damage"] == 389
     assert fights[0]["focus_died"] is False
