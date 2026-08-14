@@ -41,3 +41,19 @@ The overlay lets you add any number of accounts. Refresh pulls OpenDota again fo
 
 Filters apply to cached rows for the active span. They do not change how points are calculated. Turn both on to score ranked non-turbo games only.
 
+## Ranked field
+
+Selecting a tracked player loads a **ranked field**: every named account that loaded into that player's ranked games in the span (cap 40 newest). Points use the same formula, but only on those shared lobbies, so a duo is compared on the same games as random pub opponents.
+
+The overlay table keeps **regulars**: you, your duo, and anyone with 2+ shared ranked games. One-game cores still count toward "you are X of Y by average," but they are listed as a count so a single stomp does not bury the duo.
+
+| Label | Meaning |
+| --- | --- |
+| You | The tracked account |
+| Duo | Highest teammate-game count, at least 2 ranked games on your team |
+| Stack | Other repeated teammates (2+ games) |
+| Team / Enemy / Lobby | Everyone else in those ranked matches |
+
+Unparsed ranked replays are submitted to OpenDota automatically (up to 10 per pass, 10 rate-limit calls each). Ward, stun, and teamfight points fill in after the parse. Valve replays usually expire after about 10 days.
+
+

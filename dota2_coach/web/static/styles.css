@@ -395,7 +395,7 @@ button:disabled {
 
 .fantasy-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 1.1fr);
   gap: 12px;
   align-items: start;
 }
@@ -476,6 +476,76 @@ button:disabled {
 
 .empty-copy {
   color: var(--muted);
+}
+
+.field-box {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.field-box h3 {
+  margin: 0;
+  color: var(--gold);
+}
+
+.field-box p {
+  margin: 0;
+}
+
+.field-table {
+  display: grid;
+  gap: 4px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 2rem 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  background: #0b1015;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 10px;
+}
+
+.field-row.is-you {
+  border: 1px solid var(--gold);
+}
+
+.field-row.is-duo {
+  border-color: var(--radiant);
+}
+
+.field-rank {
+  color: var(--gold);
+  font-family: Teko, Barlow, sans-serif;
+  font-size: 1.2rem;
+}
+
+.badge {
+  color: #1a1408;
+  background: var(--muted);
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.is-you .badge {
+  background: var(--gold);
+}
+
+.is-duo .badge {
+  background: var(--radiant);
 }
 
 @media (max-width: 900px) {

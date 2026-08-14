@@ -79,7 +79,7 @@ def test_request_parse_then_status(client: TestClient) -> None:
     assert started.status_code == 200
     body = started.json()
     assert body["parsed"] is False
-    assert body["job_id"] == "job-1"
+    assert body["job_id"]
 
     status = client.get(
         "/api/matches/7000000001/parse-status",

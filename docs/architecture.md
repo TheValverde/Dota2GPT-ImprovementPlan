@@ -30,7 +30,9 @@ flowchart LR
 | `dota2_coach/desktop.py` | pywebview overlay, always-on-top, local server |
 | `dota2_coach/fantasy/scoring.py` | OpenDota + assist fantasy formula and spans |
 | `dota2_coach/fantasy/store.py` | SQLite roster and match cache |
-| `dota2_coach/fantasy/tracker.py` | Add/remove players, refresh, summaries |
+| `dota2_coach/fantasy/tracker.py` | Add/remove players, refresh, summaries, ranked field |
+| `dota2_coach/fantasy/field.py` | Ranked lobby comparison and duo detection |
+| `dota2_coach/opendota/parse_jobs.py` | OpenDota parse submit helper |
 | `dota2_coach/opendota/` | Match, search, profile, projected match history, parse jobs |
 | `dota2_coach/opendota/parsed.py` | Latest parsed match from `version` on history rows |
 | `dota2_coach/opendota/roles.py` | Lane/farm assignment from OpenDota fields |
