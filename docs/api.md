@@ -67,6 +67,14 @@ Adds or refreshes that account.
 
 Per-match points for the span.
 
+### `GET /api/fantasy/players/{account_id}/field`
+
+Ranked lobby comparison for the span. Always `ranked_only`. Respects `hide_turbo`. Scores every named player in those lobbies with the same fantasy formula. `duo` is the teammate with the most shared ranked games (minimum 2).
+
+### `POST /api/fantasy/players/{account_id}/parse-missing`
+
+Submit OpenDota parse jobs for unparsed ranked replays in the span, up to 10 per call.
+
 ### `POST /api/fantasy/refresh`
 
 ```json

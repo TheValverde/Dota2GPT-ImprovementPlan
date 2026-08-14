@@ -14,7 +14,7 @@ uv run dota2-coach
 
 That launches the overlay window. Pin keeps it above other apps.
 
-Fantasy tracking does not need an OpenAI key. Add as many OpenDota accounts as you want, then slice the board by days, weeks, months, or last N matches. Ranked only and Hide turbo filter the cached span.
+Fantasy tracking does not need an OpenAI key. Add as many OpenDota accounts as you want, then slice the board by days, weeks, months, or last N matches. Ranked only and Hide turbo filter the cached span. Open a player to compare ranked fantasy points against their duo and everyone else in those lobbies.
 
 HTTP-only (Docker or a browser):
 

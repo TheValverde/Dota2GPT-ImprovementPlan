@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
+from time import time
 from typing import Any
 
 from dota2_coach.fantasy.scoring import Span, score_match
@@ -41,6 +42,12 @@ class FantasyStore:
                     points REAL NOT NULL,
                     parsed INTEGER NOT NULL,
                     PRIMARY KEY (account_id, match_id)
+                );
+                CREATE TABLE IF NOT EXISTS full_matches (
+                    match_id INTEGER PRIMARY KEY,
+                    payload TEXT NOT NULL,
+                    version INTEGER,
+                    fetched_at INTEGER NOT NULL
                 );
                 """
             )
@@ -158,3 +165,36 @@ class FantasyStore:
         if limit is not None:
             return scored[:limit]
         return scored
+
+    def upsert_full_match(self, match: dict[str, Any]) -> None:
+        match_id = match.get("match_id")
+        if match_id is None:
+            return
+        version = match.get("version")
+        try:
+            version_id = int(version) if version is not None else None
+        except (TypeError, ValueError):
+            version_id = None
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO full_matches (match_id, payload, version, fetched_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(match_id) DO UPDATE SET
+                    payload = excluded.payload,
+                    version = excluded.version,
+                    fetched_at = excluded.fetched_at
+                """,
+                (int(match_id), json.dumps(match), version_id, int(time())),
+            )
+
+    def get_full_match(self, match_id: int) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM full_matches WHERE match_id = ?",
+                (int(match_id),),
+            ).fetchone()
+        if row is None:
+            return None
+        payload = json.loads(row["payload"])
+        return payload if isinstance(payload, dict) else None

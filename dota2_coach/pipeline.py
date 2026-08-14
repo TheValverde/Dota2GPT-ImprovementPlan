@@ -9,8 +9,7 @@ from dota2_coach.config import Settings
 from dota2_coach.errors import OpenDotaError
 from dota2_coach.opendota.client import OpenDotaClient
 from dota2_coach.opendota.normalize import build_match_brief, find_focus_player
-
-REPLAY_RETENTION_SECONDS = 10 * 86400
+from dota2_coach.opendota.parse_jobs import REPLAY_RETENTION_SECONDS, submit_parse
 
 
 class AnalysisPipeline:
@@ -50,41 +49,7 @@ class AnalysisPipeline:
 
     def start_parse(self, match_id: int) -> dict[str, Any]:
         match = self.opendota.get_match(match_id)
-        if match.get("version") is not None:
-            return {
-                "match_id": match_id,
-                "parsed": True,
-                "job_id": None,
-                "message": "OpenDota already parsed this match.",
-            }
-        start_time = match.get("start_time")
-        expired = bool(
-            start_time and int(time()) - int(start_time) > REPLAY_RETENTION_SECONDS
-        )
-        payload = self.opendota.request_parse(match_id) or {}
-        if not payload:
-            match = self.opendota.get_match(match_id)
-            if match.get("version") is not None:
-                return {
-                    "match_id": match_id,
-                    "parsed": True,
-                    "job_id": None,
-                    "message": "OpenDota already parsed this match.",
-                }
-        job = payload.get("job") if isinstance(payload.get("job"), dict) else {}
-        job_id = job.get("jobId") or payload.get("jobId")
-        message = "Parse job submitted."
-        if expired:
-            message = (
-                "Parse job submitted, but Valve replays usually expire after about 10 days."
-            )
-        return {
-            "match_id": match_id,
-            "parsed": False,
-            "job_id": job_id,
-            "message": message,
-            "replay_may_have_expired": expired,
-        }
+        return submit_parse(self.opendota, match)
 
     def parse_status(self, match_id: int, job_id: str) -> dict[str, Any]:
         job = self.opendota.parse_job(job_id)

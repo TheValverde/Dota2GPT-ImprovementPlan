@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from dota2_coach.analysis.schema import CoachReport, FocusArea
 from dota2_coach.api.app import create_app
 from dota2_coach.config import Settings
+from dota2_coach.errors import MatchNotFoundError
 from dota2_coach.fantasy.store import FantasyStore
 from dota2_coach.fantasy.tracker import FantasyTracker
 from dota2_coach.opendota.constants import GameConstants
@@ -68,10 +69,15 @@ class FakeOpenDota:
         }
 
         self._job_queued = False
+        self._full_matches = {int(match["match_id"]): match}
+        self._pending_parses: dict[str, int] = {}
+        self._job_counter = 0
 
     def get_match(self, match_id: int) -> dict:
-        assert match_id == self._match["match_id"]
-        return self._match
+        payload = self._full_matches.get(int(match_id))
+        if not isinstance(payload, dict) or not payload.get("players"):
+            raise MatchNotFoundError(match_id)
+        return payload
 
     def load_constants(self) -> GameConstants:
         return self._constants
@@ -103,7 +109,7 @@ class FakeOpenDota:
         ]
 
     def get_player(self, account_id: int) -> dict:
-        names = {111: "TestCarry", 222: "EnemyMid"}
+        names = {111: "TestCarry", 222: "EnemyMid", 444: "TestSupport"}
         return {
             "account_id": account_id,
             "personaname": names.get(account_id, f"Player{account_id}"),
@@ -130,15 +136,24 @@ class FakeOpenDota:
         }
 
     def request_parse(self, match_id: int) -> dict:
+        self._job_counter += 1
+        job_id = f"job-{self._job_counter}"
+        self._pending_parses[job_id] = int(match_id)
         self._job_queued = True
-        return {"job": {"jobId": "job-1"}}
+        return {"job": {"jobId": job_id}}
 
     def parse_job(self, job_id: str | int) -> dict | None:
-        if self._job_queued:
+        key = str(job_id)
+        match_id = self._pending_parses.pop(key, None)
+        if match_id is None and self._job_queued:
+            match_id = int(self._match["match_id"])
             self._job_queued = False
-            self._match["version"] = 21
-            return {"state": "active"}
-        return None
+        if match_id is None:
+            return None
+        match = self._full_matches.get(int(match_id), self._match)
+        match["version"] = 21
+        self._job_queued = bool(self._pending_parses)
+        return {"state": "active"}
 
 
 class FakeCoach:

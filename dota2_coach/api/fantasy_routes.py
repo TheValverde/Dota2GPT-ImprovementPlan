@@ -65,6 +65,40 @@ def remove_player(
     return {"ok": True}
 
 
+@router.get("/players/{account_id}/field")
+def ranked_field(
+    account_id: int,
+    amount: int = Query(default=7, ge=1, le=365),
+    unit: str = Query(default="days"),
+    hide_turbo: bool = Query(default=False),
+    tracker: FantasyTracker = Depends(get_tracker),
+) -> dict:
+    try:
+        return tracker.ranked_field(account_id, _span(amount, unit), hide_turbo=hide_turbo)
+    except TrackedPlayerNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except CoachError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/players/{account_id}/parse-missing")
+def parse_missing_ranked(
+    account_id: int,
+    amount: int = Query(default=7, ge=1, le=365),
+    unit: str = Query(default="days"),
+    hide_turbo: bool = Query(default=False),
+    tracker: FantasyTracker = Depends(get_tracker),
+) -> dict:
+    try:
+        return tracker.parse_missing_ranked(
+            account_id, _span(amount, unit), hide_turbo=hide_turbo
+        )
+    except TrackedPlayerNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except CoachError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
 @router.get("/players/{account_id}")
 def player_card(
     account_id: int,

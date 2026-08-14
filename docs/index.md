@@ -12,4 +12,4 @@ Overlay companion for post-game coaching and a fantasy point board.
 
 **Coach.** Look up a player, pick a match, get a graded improvement plan. The brief includes an inferred lane assignment and hero-wide OpenDota percentiles. Unparsed matches can request a parse, then re-analyze.
 
-**Fantasy.** Track any number of accounts. Totals, averages, and per-match points over a span of days, weeks, months, or last N matches. Optional ranked-only and hide-turbo filters.
+**Fantasy.** Track any number of accounts. Totals, averages, and per-match points over a span of days, weeks, months, or last N matches. Optional ranked-only and hide-turbo filters. Selecting a player also scores everyone in their ranked lobbies (duo plus the rest of the field) and requests parses for unparsed replays.
