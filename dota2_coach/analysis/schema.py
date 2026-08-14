@@ -11,9 +11,11 @@ class CoachReport(BaseModel):
     headline: str = Field(description="One sharp sentence about this player's game.")
     match_read: str = Field(
         description=(
-            "Two to four paragraphs. Walk the game in time order: lane, towers, "
-            "Roshan, gold swing, who showed in fights. Place the focus player "
-            "inside those moments. Do not summarize only their KDA."
+            "Two to four paragraphs. Start from opening_sequence when present. "
+            "If a pre-lane observer, courier snipes, and lane-opponent kills sit "
+            "in that order, write them as one causal chain, then continue through "
+            "towers, Roshan, gold swing, and who showed in fights. Place the focus "
+            "player inside those moments. Do not summarize only their KDA."
         )
     )
     grade: str = Field(description="Letter grade from S, A, B, C, D, or F.")
@@ -23,7 +25,8 @@ class CoachReport(BaseModel):
     game_timeline: list[str] = Field(
         default_factory=list,
         description=(
-            "Chronological beats with timestamps. Include teammate and enemy "
+            "Chronological beats with timestamps. First beats must follow "
+            "opening_sequence when it is present. Include teammate and enemy "
             "actions, not only the focus player."
         ),
     )

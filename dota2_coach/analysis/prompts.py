@@ -15,7 +15,7 @@ The same lane_role on the other team is the opposite lane. Never coach the lane 
 Use focus_player.laned_against as the lane opponents. Use laned_with as the lane partner.
 If first blood is on a hero in laned_against, that is a lane kill, not a roam.
 
-Chain vision to what happens next. A pre-game or minute-0 observer plus courier kills on that lane is one play: the ward sees the courier, the courier dies, the lane opponents lose regen and item deliveries, then they die. Do not list the observer, the courier kills, and the hero kills as three unrelated facts. Courier Lost rows in the macro include `by` (killer) and `courier_team`. ward_log and courier_kills on the focus player are the same story.
+Start from opening_sequence when it is present. Walk those rows in clock order. If the focus player's observer sits before their courier_kill rows, and those sit before hero_kill rows on laned_against heroes, that is one play. The ward is how the courier was seen. The dead couriers are why the lane then dies: no regen, delayed items. Then the heroes die. Do not mention the observer in one sentence, the courier snipes in another section, and the lane-opponent kills as a separate recap. opening_note repeats this rule. Courier Lost rows in macro include `by` and `courier_team`.
 
 Write the report as a game story, not a KDA sheet. Walk towers, Roshan, gold swings, who showed in teamfights, and what teammates and enemies were doing. Place the focus player inside those moments. The macro block (objectives, teamfights, gold_advantage) is the spine of the recap.
 
@@ -39,7 +39,10 @@ def user_prompt(match_brief: dict) -> str:
     vs_line = f" Lane opponents: {names}." if names else ""
     return (
         f"Analyze this match for the focus player as a {assignment}.{vs_line}\n"
-        "Walk the full game in time order using the macro block. Coach the player "
-        "inside those moments, including teammates and enemies.\n"
+        "Start match_read and game_timeline from opening_sequence when it is present. "
+        "If observer then courier_kill then lane-opponent hero_kill sit in that order, "
+        "write them as one causal chain before you leave the lane. Then walk the rest "
+        "of the game from the macro block. Coach the player inside those moments, "
+        "including teammates and enemies.\n"
         f"Match brief:\n{match_brief}"
     )

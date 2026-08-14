@@ -38,6 +38,7 @@ flowchart LR
 | `dota2_coach/opendota/roles.py` | Lane/farm assignment from OpenDota fields |
 | `dota2_coach/opendota/lanes.py` | Safelane vs offlane matchup (map side, not same `lane_role`) |
 | `dota2_coach/opendota/timeline.py` | Compact towers, Roshan, fights, and gold swing for the coach brief |
+| `dota2_coach/opendota/opening.py` | First eight minutes as one clock: focus wards, courier snipes, hero kills, towers |
 | `dota2_coach/opendota/abilities.py` | Ability target names for the focus player |
 | `dota2_coach/opendota/benchmarks.py` | Match percentiles and hero-curve interpolation |
 | `dota2_coach/opendota/filters.py` | Ranked-only and hide-turbo fantasy filters |
