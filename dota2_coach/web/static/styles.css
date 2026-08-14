@@ -1,0 +1,536 @@
+:root {
+  --bg: #07090c;
+  --panel: #12181f;
+  --panel-2: #1a222c;
+  --ink: #f4efe4;
+  --muted: #c4bba8;
+  --gold: #f0c14b;
+  --gold-deep: #c4921a;
+  --radiant: #3ee08f;
+  --dire: #ff5a4f;
+  --line: #2b3644;
+  --danger: #ff8a7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background:
+    radial-gradient(circle at top left, #1c1408 0%, transparent 42%),
+    radial-gradient(circle at top right, #1a0b0b 0%, transparent 36%),
+    var(--bg);
+  color: var(--ink);
+  font-family: Barlow, "Segoe UI", sans-serif;
+}
+
+.overlay {
+  display: grid;
+  grid-template-rows: 44px 1fr;
+  overflow: hidden;
+}
+
+.titlebar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 0 10px 0 14px;
+  background: #0b1015;
+  border-bottom: 1px solid var(--line);
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.brand,
+.tab,
+.window-controls button {
+  font-family: Teko, Barlow, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand {
+  margin: 0;
+  color: var(--gold);
+  font-size: 1.35rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.window-controls {
+  display: flex;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.tab,
+.ghost {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab.is-active,
+.ghost.is-active,
+#pin-btn.is-active {
+  color: #1a1408;
+  background: var(--gold);
+}
+
+.ghost.danger:hover {
+  color: var(--danger);
+}
+
+.shell {
+  overflow: auto;
+  padding: 16px;
+}
+
+.panel-view {
+  display: grid;
+  gap: 14px;
+}
+
+.hero h1,
+.output h2,
+.recent h2,
+.grade,
+.player-detail h2,
+.roster-card h3 {
+  font-family: Teko, Barlow, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.panel,
+.output,
+.card,
+.roster-card,
+.player-detail {
+  background: linear-gradient(180deg, var(--panel), #0e141a);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.panel {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
+label {
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.actions,
+.fantasy-bar,
+.span-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  background: var(--gold);
+  color: #1a1408;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.status {
+  margin: 0;
+  color: var(--muted);
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #0b1015;
+  border: 1px solid var(--line);
+}
+
+.suggestions button {
+  width: 100%;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.suggestions button:hover,
+.suggestions button:focus {
+  background: #243140;
+}
+
+.recent h2,
+.output h2,
+.player-detail h2 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+}
+
+.recent-list,
+.grid {
+  display: grid;
+  gap: 10px;
+}
+
+.recent-list {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.match-chip,
+.card {
+  padding: 12px 14px;
+}
+
+.match-chip {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.match-chip.win,
+.roster-card.win {
+  border-color: #1f6a45;
+}
+
+.match-chip.loss {
+  border-color: #7a2d2d;
+}
+
+.output {
+  padding: 16px;
+}
+
+.headline {
+  font-size: 1.3rem;
+  margin: 0 0 8px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  background: var(--gold);
+  color: #1a1408;
+  font-size: 2rem;
+  padding: 0 10px;
+}
+
+.grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+}
+
+.card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.radiant {
+  color: var(--radiant);
+}
+
+.dire {
+  color: var(--dire);
+}
+
+.fantasy-bar {
+  align-items: end;
+}
+
+.span-controls input {
+  width: 88px;
+}
+
+.span-controls select {
+  width: 140px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.check input {
+  width: auto;
+  accent-color: var(--gold);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.parse-box {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  display: grid;
+  gap: 8px;
+}
+
+.add-player {
+  flex: 1;
+  min-width: 240px;
+}
+
+.fantasy-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 1.1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.roster {
+  display: grid;
+  gap: 8px;
+}
+
+.roster-card {
+  display: grid;
+  grid-template-columns: 1fr auto 90px auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.roster-card.is-selected {
+  border-color: var(--gold);
+}
+
+.roster-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.roster-card p,
+.score-block p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.total {
+  color: var(--gold) !important;
+  font-family: Teko, Barlow, sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.spark {
+  display: flex;
+  align-items: end;
+  gap: 2px;
+  height: 36px;
+}
+
+.spark span {
+  flex: 1;
+  background: var(--gold);
+  min-width: 3px;
+}
+
+.remove {
+  color: var(--danger);
+  padding: 6px 8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.match-table {
+  display: grid;
+  gap: 6px;
+}
+
+.match-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  background: var(--panel-2);
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  text-align: left;
+}
+
+.empty-copy {
+  color: var(--muted);
+}
+
+.field-box {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.field-box h3 {
+  margin: 0;
+  color: var(--gold);
+}
+
+.field-box p {
+  margin: 0;
+}
+
+.field-table {
+  display: grid;
+  gap: 4px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 2rem 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  background: #0b1015;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 10px;
+}
+
+.field-row.is-you {
+  border: 1px solid var(--gold);
+}
+
+.field-row.is-duo {
+  border-color: var(--radiant);
+}
+
+.field-rank {
+  color: var(--gold);
+  font-family: Teko, Barlow, sans-serif;
+  font-size: 1.2rem;
+}
+
+.badge {
+  color: #1a1408;
+  background: var(--muted);
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.is-you .badge {
+  background: var(--gold);
+}
+
+.is-duo .badge {
+  background: var(--radiant);
+}
+
+@media (max-width: 900px) {
+  .fantasy-layout,
+  .roster-card {
+    grid-template-columns: 1fr;
+  }
+}

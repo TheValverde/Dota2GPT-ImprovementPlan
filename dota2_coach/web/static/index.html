@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dota 2 Coach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Teko:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body class="overlay">
+    <header class="titlebar">
+      <p class="brand">Dota Coach</p>
+      <nav class="tabs" aria-label="Panels">
+        <button type="button" class="tab is-active" data-tab="coach">Coach</button>
+        <button type="button" class="tab" data-tab="fantasy">Fantasy</button>
+      </nav>
+      <div class="window-controls">
+        <button type="button" id="pin-btn" class="ghost" title="Always on top">Pin</button>
+        <button type="button" id="min-btn" class="ghost" title="Minimize">_</button>
+        <button type="button" id="close-btn" class="ghost danger" title="Close">x</button>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section id="panel-coach" class="panel-view">
+        <form id="analyze-form" class="panel">
+          <div class="field">
+            <label for="player">Player name or account ID</label>
+            <input
+              id="player"
+              name="player"
+              autocomplete="off"
+              placeholder="Persona name or 32-bit account ID"
+              required
+            />
+            <ul id="player-results" class="suggestions" hidden></ul>
+          </div>
+          <div class="field">
+            <label for="match-id">Match ID</label>
+            <input
+              id="match-id"
+              name="match_id"
+              inputmode="numeric"
+              placeholder="From OpenDota or the scoreboard"
+              required
+            />
+          </div>
+          <div class="actions">
+            <button type="submit" id="submit">Analyze match</button>
+            <p id="status" class="status" role="status"></p>
+          </div>
+          <div id="recent" class="recent" hidden>
+            <h2>Recent matches</h2>
+            <div id="recent-list" class="recent-list"></div>
+          </div>
+        </form>
+        <section id="output" class="output" hidden></section>
+      </section>
+
+      <section id="panel-fantasy" class="panel-view" hidden>
+        <div class="panel fantasy-bar">
+          <div class="span-controls">
+            <label for="span-amount">Span</label>
+            <input id="span-amount" type="number" min="1" max="365" value="7" />
+            <select id="span-unit">
+              <option value="days">Days</option>
+              <option value="weeks">Weeks</option>
+              <option value="months">Months</option>
+              <option value="matches">Matches</option>
+            </select>
+            <button type="button" id="refresh-fantasy">Refresh</button>
+          </div>
+          <div class="filter-row">
+            <label class="check">
+              <input type="checkbox" id="ranked-only" />
+              Ranked only
+            </label>
+            <label class="check">
+              <input type="checkbox" id="hide-turbo" />
+              Hide turbo
+            </label>
+          </div>
+          <div class="field add-player">
+            <label for="fantasy-player">Add player</label>
+            <input
+              id="fantasy-player"
+              autocomplete="off"
+              placeholder="Search a name or paste account ID"
+            />
+            <ul id="fantasy-results" class="suggestions" hidden></ul>
+          </div>
+          <p id="fantasy-status" class="status" role="status"></p>
+        </div>
+        <div class="fantasy-layout">
+          <div id="roster" class="roster"></div>
+          <aside id="player-detail" class="player-detail panel" hidden></aside>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/shell.js"></script>
+    <script src="/static/js/coach.js"></script>
+    <script src="/static/js/fantasy.js"></script>
+  </body>
+</html>
