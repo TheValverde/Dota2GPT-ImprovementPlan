@@ -46,6 +46,7 @@ flowchart LR
 | `dota2_coach/analysis/coverage.py` | Coverage checklist and repair pass so reports never skip deaths, lost objectives, or gold swings |
 | `dota2_coach/analysis/ability_facts.py` | Curated hero mechanics injected for the ten heroes in the lobby |
 | `dota2_coach/analysis/rubrics.py` | Role rubrics the grade is checked against |
+| `dota2_coach/opendota/ability_usage.py` | Focus spell targets split ally/enemy/self, manual ends, per-fight cast counts |
 | `dota2_coach/opendota/abilities.py` | Ability target names for the focus player |
 | `dota2_coach/opendota/benchmarks.py` | Match percentiles and hero-curve interpolation |
 | `dota2_coach/opendota/filters.py` | Ranked-only and hide-turbo fantasy filters |

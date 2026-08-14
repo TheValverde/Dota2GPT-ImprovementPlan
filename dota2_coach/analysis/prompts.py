@@ -25,6 +25,7 @@ How to read the data blocks:
 - phases: laning, midgame, closing. Use them as the spine so no stretch of the game is skipped.
 - recent_form: habits across the player's recent games. Connect repeated patterns; do not re-coach old games.
 - ability_facts: authoritative mechanics for heroes in this lobby. Prefer them over memory.
+- ability_usage: every focus spell with targets split ally, enemy, and self, plus per-fight cast counts. Ally casts on hard disables are save attempts; cross with teamfights.died and macro.teamfights to judge them. manual_ends is deliberate wake timing (Nightmare End).
 
 Spell rules:
 - Do not recommend putting a damage-reduction or damage-over-time debuff on a target that is already hard-disabled.
@@ -57,6 +58,8 @@ def user_prompt(match_brief: dict) -> str:
         "Cover every entry in death_windows, every objective_windows row where "
         "lost_by_focus_team is true, and every gold_swings row. Coach the player "
         "inside those moments, including what teammates and enemies were doing.\n"
+        "When ability_usage is present, grade spell target selection and call out "
+        "ally saves or failed save attempts with the fight context.\n"
         f"{_rubric_lines(match_brief)}"
         f"Match brief:\n{match_brief}"
     )

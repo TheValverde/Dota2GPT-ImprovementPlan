@@ -19,6 +19,10 @@ from dota2_coach.opendota.abilities import (
     named_counts,
     npc_hero_label,
 )
+from dota2_coach.opendota.ability_usage import (
+    ABILITY_USAGE_NOTE,
+    build_ability_usage,
+)
 from dota2_coach.opendota.lanes import describe_lane_matchup
 from dota2_coach.opendota.roles import infer_assignment
 from dota2_coach.opendota.lane_swing import build_lane_swing
@@ -292,4 +296,8 @@ def build_match_brief(
     swing = build_lane_swing(match, constants, focus)
     if swing:
         brief["lane_swing"] = swing
+    ability_usage = build_ability_usage(match, constants, focus)
+    if ability_usage:
+        brief["ability_usage"] = ability_usage
+        brief["ability_usage_note"] = ABILITY_USAGE_NOTE
     return brief

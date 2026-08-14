@@ -131,6 +131,11 @@ def test_build_match_brief_includes_spell_targets_and_macro(
     assert brief["focus_player"]["ability_targets"]["bane_fiends_grip"]["Drow Ranger"] == 2
     assert brief["focus_player"]["courier_kills"] == 2
     assert brief["focus_player"]["ward_log"][0] == {"type": "observer", "time": "-0:39"}
+    grip = next(
+        row for row in brief["ability_usage"]["abilities"] if row["ability_key"] == "bane_fiends_grip"
+    )
+    assert grip["casts"] == 2
+    assert brief["ability_usage_note"]
     assert brief["macro"]["winner"] == "Radiant"
     ledger = brief["event_ledger"]
     events = [row["event"] for row in ledger]
