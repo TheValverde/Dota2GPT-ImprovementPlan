@@ -96,3 +96,29 @@ def test_build_match_brief_uses_hero_curve_without_match_benchmarks(
     brief = build_match_brief(match, "TestCarry", constants, hero_benchmarks=curve)
     assert brief["focus_player"]["benchmark_source"] == "hero_curve"
     assert brief["focus_player"]["benchmarks"]["gold_per_min"]["percentile"] == 74
+
+
+def test_build_match_brief_includes_spell_targets_and_macro(
+    sample_match: dict, constants: GameConstants
+) -> None:
+    player = dict(sample_match["players"][0])
+    player["ability_targets"] = {
+        "bane_fiends_grip": {"npc_dota_hero_drow_ranger": 2},
+        "bane_enfeeble": {"npc_dota_hero_crystal_maiden": 1},
+    }
+    player["ability_uses"] = {"bane_fiends_grip": 2, "bane_enfeeble": 1}
+    match = dict(sample_match)
+    match["players"] = [player, *sample_match["players"][1:]]
+    match["objectives"] = [
+        {
+            "time": 393,
+            "type": "building_kill",
+            "key": "npc_dota_goodguys_tower1_bot",
+            "slot": 0,
+        }
+    ]
+    match["radiant_gold_adv"] = [0, -500, -2000]
+    brief = build_match_brief(match, "TestCarry", constants)
+    assert brief["focus_player"]["ability_targets"]["bane_fiends_grip"]["Drow Ranger"] == 2
+    assert brief["macro"]["objectives"][0]["by"] == "Anti-Mage"
+    assert brief["macro"]["winner"] == "Radiant"

@@ -166,6 +166,7 @@ function renderReport({ brief, report }) {
     </div>
     <p>${escapeHtml(report.match_read)}</p>
     <p>${escapeHtml(report.kda_context)}</p>
+    ${timelineHtml(report)}
     ${benchmarksHtml(focus)}
     ${parseHtml(brief)}
     <div class="grid">
@@ -200,6 +201,14 @@ function renderReport({ brief, report }) {
   if (parseBtn) {
     parseBtn.addEventListener("click", () => requestParse(brief));
   }
+}
+
+function timelineHtml(report) {
+  const beats = report.game_timeline || [];
+  if (!beats.length) {
+    return "";
+  }
+  return `<article class="card"><h3>Game</h3>${listHtml(beats)}</article>`;
 }
 
 function benchmarksHtml(focus) {
